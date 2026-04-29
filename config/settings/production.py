@@ -4,13 +4,13 @@ from .base import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ['docugit.gibit.pe', '.gibit.pe', 'tu_ip_del_servidor']
 
 SECRET_KEY = os.environ['SECRET_KEY']
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.environ.get('DB_NAME', 'gibit'),
         'USER': os.environ.get('DB_USER', 'gibit'),
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
@@ -18,6 +18,9 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
+
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
 
 # Seguridad HTTP
 SECURE_BROWSER_XSS_FILTER = True
@@ -27,6 +30,12 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = ['https://docugit.gibit.pe']
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+
+
 
 # Email (configurar con variables de entorno)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
