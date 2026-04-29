@@ -1,5 +1,6 @@
 .env
 .venv/
+venv/
 .claude/
 
 # logs
@@ -15,3 +16,15 @@ staticfiles/
 # Python
 __pycache__/
 *.pyc
+
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Carpetas de node (si llegas a usar algo de JS en el futuro)
+node_modules/
