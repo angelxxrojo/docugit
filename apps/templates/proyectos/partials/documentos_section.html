@@ -1,0 +1,164 @@
+<div id="documentos-section" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+    <h3 class="font-semibold text-gray-800">{% trans "Documentos del proyecto" %}</h3>
+    <span class="text-xs text-gray-400">{{ documentos|length }}</span>
+  </div>
+
+  {% if documentos %}
+  <div class="divide-y divide-gray-50">
+    {% for doc in documentos %}
+    <div class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 text-gray-500 font-mono text-xs uppercase">
+          {{ doc.extension }}
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <p class="text-sm font-medium text-gray-900 truncate">{{ doc.titulo }}</p>
+            <span class="flex-shrink-0 text-xs px-1.5 py-0.5 rounded {{ doc.tipo_badge_class }}">{{ doc.get_tipo_display }}</span>
+            {% if doc.esta_vencido %}
+            <span class="flex-shrink-0 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium">Vencido</span>
+            {% endif %}
+          </div>
+          <div class="flex items-center gap-3 mt-0.5">
+            {% if doc.tecnico %}
+            <p class="text-xs text-gray-400">{{ doc.tecnico.get_full_name }}</p>
+            {% endif %}
+            {% if doc.fecha_vencimiento %}
+            <p class="text-xs {% if doc.esta_vencido %}text-red-500{% else %}text-gray-400{% endif %}">
+              Vence {{ doc.fecha_vencimiento|date:"d/m/Y" }}
+            </p>
+            {% endif %}
+            <p class="text-xs text-gray-300">{{ doc.created_at|date:"d/m/Y" }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1 flex-shrink-0 ml-3">
+        <a href="{{ doc.archivo.url }}" target="_blank"
+          class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="{% trans "Descargar" %}">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+        </a>
+        <form method="post"
+          action="{% url 'proyectos:documento_delete' proyecto.pk doc.pk %}"
+          hx-post="{% url 'proyectos:documento_delete' proyecto.pk doc.pk %}"
+          hx-target="#documentos-section"
+          hx-swap="outerHTML"
+          class="inline">
+          {% csrf_token %}
+          <button type="submit"
+            class="opacity-0 group-hover:opacity-100 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+            title="{% trans "Archivar documento" %}">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="px-5 py-8 text-center text-gray-400 text-sm">
+    <svg class="w-8 h-8 text-gray-200 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    {% trans "Sin documentos cargados aún." %}
+  </div>
+  {% endif %}
+
+  <!-- Generated documents from templates -->
+  {% if docs_generados %}
+  <div class="border-t border-gray-100">
+    <div class="px-5 py-2 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
+      <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">{% trans "Documentos generados" %}</p>
+      <span class="text-xs text-blue-400">{{ docs_generados|length }}</span>
+    </div>
+    {% for gdoc in docs_generados %}
+    <div class="flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 group border-b border-gray-50 last:border-0">
+      <div>
+        <a href="{% url 'documentos:documento_detail' gdoc.pk %}"
+          class="text-sm font-medium text-gray-800 hover:text-blue-600 transition-colors">
+          {{ gdoc.nombre }}
+        </a>
+        <p class="text-xs text-gray-400 mt-0.5">{{ gdoc.get_tipo_label }} · {{ gdoc.created_at|date:"d/m/Y" }}</p>
+      </div>
+      <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <a href="{% url 'documentos:documento_print' gdoc.pk %}" target="_blank"
+          class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" title="Imprimir">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+        </a>
+        <a href="{% url 'documentos:documento_update' gdoc.pk %}"
+          class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors text-xs">
+          Editar
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Upload form -->
+  <div class="border-t border-gray-100 px-5 py-4 bg-gray-50"
+    x-data="{tipo: 'otro', showSctr: false}"
+    x-init="$watch('tipo', v => showSctr = (v === 'sctr'))">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{% trans "Cargar documento" %}</p>
+    <form method="post"
+      action="{% url 'proyectos:documento_create' proyecto.pk %}"
+      hx-post="{% url 'proyectos:documento_create' proyecto.pk %}"
+      hx-target="#documentos-section"
+      hx-swap="outerHTML"
+      hx-encoding="multipart/form-data"
+      class="space-y-3">
+      {% csrf_token %}
+      {% if documento_form.non_field_errors %}
+      <div class="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{{ documento_form.non_field_errors }}</div>
+      {% endif %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Tipo" %} <span class="text-red-400">*</span></label>
+          <select name="tipo" id="doc_tipo" x-model="tipo"
+            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            {% for val, label in documento_form.fields.tipo.choices %}
+            <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Título" %} <span class="text-red-400">*</span></label>
+          {{ documento_form.titulo }}
+          {% if documento_form.titulo.errors %}<p class="mt-0.5 text-xs text-red-600">{{ documento_form.titulo.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Archivo" %} <span class="text-red-400">*</span></label>
+        {{ documento_form.archivo }}
+        {% if documento_form.archivo.errors %}<p class="mt-0.5 text-xs text-red-600">{{ documento_form.archivo.errors.0 }}</p>{% endif %}
+      </div>
+      <!-- SCTR fields (only shown when tipo = sctr) -->
+      <div x-show="showSctr" x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
+        <div>
+          <label class="block text-xs font-medium text-orange-700 mb-1">{% trans "Técnico" %}</label>
+          {{ documento_form.tecnico }}
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-orange-700 mb-1">{% trans "Fecha de vencimiento" %}</label>
+          {{ documento_form.fecha_vencimiento }}
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <button type="submit"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+          ↑ {% trans "Cargar documento" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

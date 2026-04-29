@@ -1,0 +1,31 @@
+<div id="totales-card" {% if is_oob %}hx-swap-oob="true"{% endif %}
+  class="bg-white rounded-xl border border-gray-200 p-5">
+  <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">{% trans "Resumen financiero" %}</h4>
+
+  <div class="space-y-2 text-sm">
+    <div class="flex justify-between text-gray-600">
+      <span>{% trans "Subtotal" %}</span>
+      <span class="font-medium">${{ proforma.subtotal_usd }}</span>
+    </div>
+    {% if proforma.incluye_igv %}
+    <div class="flex justify-between text-gray-600">
+      <span>{% trans "IGV" %} ({{ proforma.porcentaje_igv }}%)</span>
+      <span class="font-medium">${{ proforma.igv_usd }}</span>
+    </div>
+    {% endif %}
+    <div class="flex justify-between text-gray-900 font-bold text-base border-t border-gray-100 pt-2 mt-2">
+      <span>{% trans "TOTAL USD" %}</span>
+      <span>${{ proforma.total_usd }}</span>
+    </div>
+    {% if proforma.tc_venta %}
+    <div class="flex justify-between text-gray-600 text-xs border-t border-gray-100 pt-2 mt-1">
+      <span>T.C. {{ proforma.tc_venta }}</span>
+      <span class="font-semibold text-sm text-gray-800">S/{{ proforma.total_pen }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if proforma.items.count == 0 %}
+  <p class="text-xs text-gray-400 mt-3 text-center">{% trans "Agrega ítems para calcular los totales" %}</p>
+  {% endif %}
+</div>

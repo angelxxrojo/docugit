@@ -1,0 +1,101 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Configuración" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Configuración" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">{% trans "Configuración de la empresa" %}</p>
+{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+{% for msg in messages %}
+<div class="mb-4 px-4 py-3 rounded-lg text-sm
+  {% if msg.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+  {% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">
+  {{ msg }}
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="max-w-2xl">
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+
+    <!-- Logo preview -->
+    {% if config.logo %}
+    <div class="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center gap-4">
+      <img src="{{ config.logo.url }}" alt="Logo" class="h-16 w-auto object-contain rounded">
+      <div>
+        <p class="text-sm font-medium text-gray-700">Logo actual</p>
+        <p class="text-xs text-gray-400">Sube una nueva imagen para reemplazarlo.</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Datos empresa -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-semibold text-gray-800 text-sm">{% trans "Datos de la empresa" %}</h3>
+        <p class="text-xs text-gray-400 mt-0.5">{% trans "Aparecen en proformas y contratos imprimibles." %}</p>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Nombre de la empresa" %} <span class="text-red-400">*</span></label>
+            {{ form.nombre_empresa }}
+            {% if form.nombre_empresa.errors %}<p class="mt-1 text-xs text-red-600">{{ form.nombre_empresa.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "RUC" %}</label>
+            {{ form.ruc }}
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Slogan / Descripción corta" %}</label>
+          {{ form.slogan }}
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Dirección" %}</label>
+          {{ form.direccion }}
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Teléfono" %}</label>
+            {{ form.telefono }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Email" %}</label>
+            {{ form.email }}
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Sitio web" %}</label>
+          {{ form.web }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Logo -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-semibold text-gray-800 text-sm">{% trans "Logo" %}</h3>
+        <p class="text-xs text-gray-400 mt-0.5">{% trans "PNG o JPG, fondo transparente recomendado. Se mostrará en el PDF de proformas." %}</p>
+      </div>
+      <div class="px-5 py-4">
+        {{ form.logo }}
+        {% if form.logo.errors %}<p class="mt-1 text-xs text-red-600">{{ form.logo.errors.0 }}</p>{% endif %}
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex justify-end">
+      <button type="submit"
+        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+        {% trans "Guardar configuración" %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

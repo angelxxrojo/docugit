@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gantt — {{ proyecto.numero }} — {{ config.nombre_empresa }}</title>
+  <style>
+    @page { margin: 15mm 15mm 20mm; size: A4 landscape; }
+    @media print {
+      .no-print { display: none !important; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff; }
+      .page { box-shadow: none; margin: 0; page-break-after: always; }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #333;
+      background: #f4f4f4;
+      line-height: 1.4;
+      font-size: 12px;
+    }
+
+    .page {
+      background: #fff;
+      max-width: 1120px;
+      margin: 24px auto;
+      min-height: 700px;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-img { height: 40px; width: auto; object-fit: contain; }
+    .logo-placeholder {
+      font-size: 22px;
+      font-weight: bold;
+      color: #5DBB63;
+      letter-spacing: -0.5px;
+    }
+    .header-info {
+      text-align: right;
+      font-size: 10px;
+      color: #777;
+      letter-spacing: 0.5px;
+    }
+    .header-info .project-num {
+      font-size: 13px;
+      font-weight: bold;
+      color: #333;
+      letter-spacing: 1px;
+    }
+
+    /* ── Meta line ── */
+    .meta-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: #777;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    .meta-sep { color: #ccc; }
+
+    /* ── Project title ── */
+    .project-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    /* ── Activities table ── */
+    table.gantt-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-bottom: 28px;
+    }
+    table.gantt-table th {
+      text-align: left;
+      font-weight: 600;
+      font-size: 9px;
+      letter-spacing: 0.8px;
+      color: #777;
+      padding: 8px 6px;
+      border-bottom: 1px solid #eee;
+      text-transform: uppercase;
+    }
+    table.gantt-table td {
+      padding: 7px 6px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+      color: #424242;
+    }
+    table.gantt-table tr:last-child td { border-bottom: 1px solid #eee; }
+    .col-num { width: 4%; text-align: center; }
+    .col-titulo { width: 36%; }
+    .col-responsable { width: 14%; }
+    .col-estado { width: 10%; }
+    .col-fecha { width: 10%; text-align: center; }
+    .col-duracion { width: 8%; text-align: center; }
+    .col-progreso { width: 8%; text-align: center; }
+
+    .estado-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .dot-pendiente { background: #9ca3af; }
+    .dot-en_progreso { background: #3b82f6; }
+    .dot-en_revision { background: #f59e0b; }
+    .dot-completado { background: #22c55e; }
+    .dot-cancelado { background: #ef4444; }
+    .dot-default { background: #6b7280; }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 5px;
+      background: #f0f0f0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: #3b82f6;
+    }
+
+    /* ── Gantt chart ── */
+    .gantt-chart {
+      margin-top: 8px;
+      background: #fafafa;
+      border: 1px solid #eee;
+      padding: 14px 16px;
+    }
+    .gantt-chart-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+
+    .gantt-timeline-header {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      margin-bottom: 6px;
+    }
+    .gantt-timeline-header .label { font-size: 9px; color: #999; }
+    .gantt-timeline-dates {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: #999;
+      border-bottom: 1px solid #e5e5e5;
+      padding-bottom: 4px;
+    }
+
+    .gantt-row {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      align-items: center;
+      min-height: 24px;
+      margin-bottom: 3px;
+      font-size: 10px;
+    }
+    .gantt-row-label {
+      color: #555;
+      font-size: 10px;
+      padding-right: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .gantt-bar-track {
+      position: relative;
+      height: 20px;
+      background: transparent;
+    }
+    .gantt-bar {
+      position: absolute;
+      top: 4px;
+      height: 12px;
+      border-radius: 2px;
+      min-width: 4px;
+    }
+    .bar-pendiente { background: #9ca3af; }
+    .bar-en_progreso { background: #3b82f6; }
+    .bar-en_revision { background: #f59e0b; }
+    .bar-completado { background: #22c55e; }
+    .bar-cancelado { background: #ef4444; }
+    .bar-default { background: #6b7280; }
+
+    .gantt-bar-label {
+      position: absolute;
+      left: 100%;
+      margin-left: 6px;
+      white-space: nowrap;
+      font-size: 9px;
+      color: #777;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 14px;
+      font-size: 9px;
+      color: #777;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .legend-bar {
+      width: 16px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    /* ── Footer ── */
+    .page-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #2c2c2c;
+      color: #fff;
+      padding: 10px 44px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* ── No-activities message ── */
+    .empty-msg {
+      text-align: center;
+      color: #999;
+      padding: 40px 0;
+      font-size: 13px;
+    }
+
+    /* ── Print controls ── */
+    .print-controls {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+    .btn-print {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #333;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 8px 16px;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .btn-print:hover { background: #555; }
+    .btn-back {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #666;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      padding: 8px 14px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      text-decoration: none;
+      background: #fff;
+    }
+    .btn-back:hover { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+
+  <!-- Print controls -->
+  <div class="print-controls no-print">
+    <button class="btn-print" onclick="window.print()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+      </svg>
+      Imprimir / PDF
+    </button>
+    <a href="{% url 'proyectos:proyecto_detail' proyecto.pk %}" class="btn-back">
+      &larr; Volver
+    </a>
+  </div>
+
+  <!-- ═══ PAGE 1: Table ═══ -->
+  <section class="page">
+
+    <header class="page-header">
+      <div class="header-left">
+        {% if config.logo %}
+          <img src="{{ request.scheme }}://{{ request.get_host }}{{ config.logo.url }}"
+               alt="{{ config.nombre_empresa }}" class="logo-img">
+        {% else %}
+          <span class="logo-placeholder">{{ config.nombre_empresa }}</span>
+        {% endif %}
+      </div>
+      <div class="header-info">
+        <div class="project-num">{{ proyecto.numero }}</div>
+        {{ config.nombre_empresa }}
+      </div>
+    </header>
+
+    <div class="meta-line">
+      <span>{{ proyecto.get_estado_display }}</span>
+      <span class="meta-sep">&bull;</span>
+      <span>{{ proyecto.empresa.razon_social }}</span>
+      {% if proyecto.fecha_inicio %}
+      <span class="meta-sep">&bull;</span>
+      <span>Inicio: {{ proyecto.fecha_inicio|date:"d/m/Y" }}</span>
+      {% endif %}
+      {% if proyecto.fecha_fin_prevista %}
+      <span class="meta-sep">&bull;</span>
+      <span>Fin previsto: {{ proyecto.fecha_fin_prevista|date:"d/m/Y" }}</span>
+      {% endif %}
+      {% if proyecto.duracion_dias %}
+      <span class="meta-sep">&bull;</span>
+      <span>{{ proyecto.duracion_dias }} dias</span>
+      {% endif %}
+    </div>
+
+    <div class="project-title">{{ proyecto.titulo }}</div>
+
+    {% if actividades %}
+    <table class="gantt-table">
+      <thead>
+        <tr>
+          <th class="col-num">#</th>
+          <th class="col-titulo">Actividad</th>
+          <th class="col-responsable">Responsable</th>
+          <th class="col-estado">Estado</th>
+          <th class="col-fecha">Inicio</th>
+          <th class="col-fecha">Fin</th>
+          <th class="col-duracion">Dias</th>
+          <th class="col-progreso">Avance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for grupo_nombre, grupo_acts in grupos.items %}
+        {% if grupo_nombre %}
+        <tr>
+          <td colspan="8" style="padding:10px 6px 5px; font-weight:600; font-size:10px; color:#4f46e5; letter-spacing:0.5px; border-bottom:2px solid #e0e7ff; background:#f8faff;">
+            {{ grupo_nombre }}
+          </td>
+        </tr>
+        {% endif %}
+        {% for act in grupo_acts %}
+        <tr>
+          <td class="col-num" style="color:#999;">{{ forloop.counter }}</td>
+          <td>{{ act.titulo }}</td>
+          <td style="color:#777;">{{ act.responsable.get_full_name|default:"—" }}</td>
+          <td>
+            <span class="estado-dot dot-{{ act.estado_slug }}"></span>
+            {{ act.estado_label }}
+          </td>
+          <td class="col-fecha">{{ act.fecha_inicio_fmt }}</td>
+          <td class="col-fecha">{{ act.fecha_fin_fmt }}</td>
+          <td class="col-duracion">{{ act.duracion_dias }}</td>
+          <td class="col-progreso">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width:{{ act.progreso }}%;"></div>
+            </div>
+            <span style="font-size:9px; color:#999;">{{ act.progreso }}%</span>
+          </td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-msg">No hay actividades registradas en este proyecto.</div>
+    {% endif %}
+
+    <div class="page-footer">
+      <span>GANTT — {{ proyecto.numero }} — {{ proyecto.titulo|upper|truncatechars:60 }}</span>
+      <span>{{ config.nombre_empresa|upper }}</span>
+    </div>
+  </section>
+
+  {% if actividades and has_dates %}
+  <!-- ═══ PAGE 2: Chart ═══ -->
+  <section class="page">
+
+    <header class="page-header">
+      <div class="header-left">
+        {% if config.logo %}
+          <img src="{{ request.scheme }}://{{ request.get_host }}{{ config.logo.url }}"
+               alt="{{ config.nombre_empresa }}" class="logo-img">
+        {% else %}
+          <span class="logo-placeholder">{{ config.nombre_empresa }}</span>
+        {% endif %}
+      </div>
+      <div class="header-info">
+        <div class="project-num">{{ proyecto.numero }}</div>
+        Diagrama de Gantt
+      </div>
+    </header>
+
+    <div class="project-title">{{ proyecto.titulo }}</div>
+
+    <div class="gantt-chart">
+      <div class="gantt-chart-title">Cronograma de actividades</div>
+
+      <!-- Timeline header -->
+      <div class="gantt-timeline-header">
+        <span class="label">Actividad</span>
+        <div class="gantt-timeline-dates">
+          <span>{{ range_start_fmt }}</span>
+          {% if range_mid_fmt %}<span>{{ range_mid_fmt }}</span>{% endif %}
+          <span>{{ range_end_fmt }}</span>
+        </div>
+      </div>
+
+      <!-- Bars -->
+      {% for grupo_nombre, grupo_acts in grupos.items %}
+      {% if grupo_nombre %}
+      <div style="font-size:9px; font-weight:600; color:#4f46e5; padding:8px 0 3px; border-top:1px solid #e5e5e5; margin-top:6px;">
+        {{ grupo_nombre }}
+      </div>
+      {% endif %}
+      {% for act in grupo_acts %}
+      {% if act.left_pct %}
+      <div class="gantt-row">
+        <span class="gantt-row-label" title="{{ act.titulo }}">{{ act.titulo|truncatechars:22 }}</span>
+        <div class="gantt-bar-track">
+          <div class="gantt-bar bar-{{ act.estado_slug }}" style="left:{{ act.left_pct }}%; width:{{ act.width_pct }}%;">
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+      {% endfor %}
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-bar" style="background:#9ca3af;"></div> Pendiente</div>
+      <div class="legend-item"><div class="legend-bar" style="background:#3b82f6;"></div> En progreso</div>
+      <div class="legend-item"><div class="legend-bar" style="background:#f59e0b;"></div> En revision</div>
+      <div class="legend-item"><div class="legend-bar" style="background:#22c55e;"></div> Completado</div>
+    </div>
+
+    <div class="page-footer">
+      <span>GANTT — {{ proyecto.numero }} — {{ proyecto.titulo|upper|truncatechars:60 }}</span>
+      <span>{{ config.nombre_empresa|upper }}</span>
+    </div>
+  </section>
+  {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Monedas" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Monedas" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'catalogo:index' %}" class="hover:text-blue-500">{% trans "Catálogo" %}</a> / {% trans "Monedas" %}
+</p>
+{% endblock %}
+
+{% block content %}
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <div>
+    <h2 class="text-xl font-bold text-gray-900">{% trans "Monedas" %}</h2>
+    <p class="text-xs text-gray-400 mt-0.5">{% trans "Divisas usadas en tipos de cambio y proformas" %}</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="{% url 'catalogo:tipocambio_list' %}"
+      class="inline-flex items-center gap-2 border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+      {% trans "Ver tasas" %}
+    </a>
+    <a href="{% url 'catalogo:moneda_create' %}"
+      class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      {% trans "Nueva Moneda" %}
+    </a>
+  </div>
+</div>
+
+<!-- Tasas vigentes -->
+{% if vigentes %}
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+  {% for tc in vigentes %}
+  <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">{{ tc.moneda.codigo }}</span>
+      <span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">{% trans "Vigente" %}</span>
+    </div>
+    <p class="text-xl font-bold text-gray-900">{{ tc.moneda.simbolo }}{{ tc.venta }}</p>
+    <p class="text-xs text-gray-400 mt-0.5">{% trans "Venta" %} · {% trans "Compra" %} {{ tc.moneda.simbolo }}{{ tc.compra }}</p>
+    <p class="text-xs text-gray-300 mt-1">{{ tc.created_at|date:"d/m/Y H:i" }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Tabla monedas -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Monedas registradas" %}</p>
+    <form method="get">
+      <label class="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
+        <input type="checkbox" name="mostrar" value="todos" {% if mostrar == 'todos' %}checked{% endif %}
+          class="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+          onchange="this.form.submit()">
+        {% trans "Mostrar inactivas" %}
+      </label>
+    </form>
+  </div>
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-gray-100">
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Código" %}</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Nombre" %}</th>
+        <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Símbolo" %}</th>
+        <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Estado" %}</th>
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Acciones" %}</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50">
+      {% for m in monedas %}
+      <tr class="hover:bg-gray-50 transition-colors {% if not m.activo %}opacity-50{% endif %}">
+        <td class="px-5 py-3.5 font-bold text-gray-800 font-mono">{{ m.codigo }}</td>
+        <td class="px-5 py-3.5 text-gray-700">{{ m.nombre }}</td>
+        <td class="px-5 py-3.5 text-center font-bold text-gray-600">{{ m.simbolo }}</td>
+        <td class="px-5 py-3.5 text-center">
+          {% if m.activo %}
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{% trans "Activa" %}</span>
+          {% else %}
+          <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{% trans "Inactiva" %}</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3.5">
+          <div class="flex items-center justify-end gap-2">
+            <a href="{% url 'catalogo:moneda_update' m.pk %}"
+              class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" title="{% trans "Editar" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+            </a>
+            {% if m.activo %}
+            <a href="{% url 'catalogo:moneda_delete' m.pk %}"
+              class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="{% trans "Desactivar" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+              </svg>
+            </a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="px-5 py-12 text-center text-gray-400 text-sm">
+          {% trans "No hay monedas registradas." %}
+          <a href="{% url 'catalogo:moneda_create' %}" class="text-blue-600 hover:text-blue-800 ml-1">+ {% trans "Crear primera" %}</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Tipos de Cambio" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Tipos de Cambio" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'catalogo:index' %}" class="hover:text-blue-500">{% trans "Catálogo" %}</a> / {% trans "Tipos de cambio" %}
+</p>
+{% endblock %}
+
+{% block content %}
+
+<!-- Tasas vigentes por moneda -->
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-xl font-bold text-gray-900">{% trans "Tasas vigentes" %}</h2>
+  <div class="flex items-center gap-2">
+    <a href="{% url 'catalogo:moneda_list' %}"
+      class="text-sm text-gray-500 hover:text-blue-600 border border-gray-300 hover:border-blue-400 px-3 py-2 rounded-lg transition-colors">
+      {% trans "Gestionar monedas" %}
+    </a>
+    <a href="{% url 'catalogo:tipocambio_create' %}"
+      class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      {% trans "Registrar nueva tasa" %}
+    </a>
+  </div>
+</div>
+
+{% if vigentes %}
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+  {% for tc in vigentes %}
+  <div class="bg-white rounded-xl border border-blue-100 p-5">
+    <div class="flex items-start justify-between mb-3">
+      <div>
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ tc.moneda.codigo }}</p>
+        <p class="text-xs text-gray-400">{{ tc.moneda.nombre }}</p>
+      </div>
+      <span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full flex-shrink-0">{% trans "Vigente" %}</span>
+    </div>
+    <div class="space-y-1">
+      <div class="flex justify-between items-baseline">
+        <span class="text-xs text-gray-400">{% trans "Venta" %}</span>
+        <span class="text-xl font-bold text-blue-700">{{ tc.moneda.simbolo }}{{ tc.venta }}</span>
+      </div>
+      <div class="flex justify-between items-baseline">
+        <span class="text-xs text-gray-400">{% trans "Compra" %}</span>
+        <span class="text-sm font-medium text-gray-600">{{ tc.moneda.simbolo }}{{ tc.compra }}</span>
+      </div>
+    </div>
+    <p class="text-xs text-gray-300 mt-3 border-t border-gray-100 pt-2">{{ tc.created_at|date:"d/m/Y H:i" }}</p>
+    {% if tc.nota %}
+    <p class="text-xs text-gray-400 italic mt-1">{{ tc.nota }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="bg-yellow-50 border border-yellow-200 rounded-xl px-5 py-4 mb-6 flex items-center justify-between">
+  <p class="text-sm text-yellow-800">{% trans "No hay tipos de cambio registrados." %}</p>
+  <a href="{% url 'catalogo:tipocambio_create' %}"
+    class="text-sm bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors">
+    {% trans "Registrar ahora" %}
+  </a>
+</div>
+{% endif %}
+
+<!-- Historial -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="px-5 py-3 border-b border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Historial de tasas" %}</p>
+    <form method="get" class="flex items-center gap-2">
+      <select name="moneda" onchange="this.form.submit()"
+        class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 bg-white">
+        <option value="">{% trans "Todas las monedas" %}</option>
+        {% for m in monedas %}
+        <option value="{{ m.codigo }}" {% if moneda_filtro == m.codigo %}selected{% endif %}>
+          {{ m.codigo }} — {{ m.nombre }}
+        </option>
+        {% endfor %}
+      </select>
+      {% if moneda_filtro %}
+      <a href="{% url 'catalogo:tipocambio_list' %}" class="text-xs text-gray-400 hover:text-gray-600">{% trans "Limpiar" %}</a>
+      {% endif %}
+    </form>
+  </div>
+
+  {% if registros %}
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-gray-100">
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Fecha y hora" %}</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{% trans "Moneda" %}</th>
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Compra" %}</th>
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Venta" %}</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">{% trans "Nota" %}</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50">
+      {% for tc in registros %}
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-3 text-gray-600">
+          {{ tc.created_at|date:"d/m/Y H:i" }}
+          {% if forloop.first and not moneda_filtro %}
+          <span class="ml-2 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">{% trans "Más reciente" %}</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3 hidden sm:table-cell">
+          <span class="font-bold text-gray-700 font-mono text-xs">{{ tc.moneda.codigo }}</span>
+          <span class="text-gray-400 ml-1 text-xs">{{ tc.moneda.simbolo }}</span>
+        </td>
+        <td class="px-5 py-3 text-right text-gray-600">{{ tc.moneda.simbolo }}{{ tc.compra }}</td>
+        <td class="px-5 py-3 text-right font-semibold text-blue-700">{{ tc.moneda.simbolo }}{{ tc.venta }}</td>
+        <td class="px-5 py-3 text-gray-400 text-xs hidden lg:table-cell">{{ tc.nota|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if is_paginated %}
+  <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+    <span>{% trans "Página" %} {{ page_obj.number }} {% trans "de" %} {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-1">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if moneda_filtro %}&moneda={{ moneda_filtro }}{% endif %}"
+        class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">← {% trans "Anterior" %}</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if moneda_filtro %}&moneda={{ moneda_filtro }}{% endif %}"
+        class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">{% trans "Siguiente" %} →</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="px-5 py-10 text-center text-gray-400 text-sm">
+    {% trans "No hay registros de tipos de cambio." %}
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

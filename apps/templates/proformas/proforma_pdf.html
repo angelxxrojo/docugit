@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ proforma.numero }} v{{ proforma.version }} — {{ config.nombre_empresa }}</title>
+  <style>
+    @page { margin: 15mm 15mm 20mm; size: A4; }
+    @media print {
+      .no-print { display: none !important; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      color: #333;
+      line-height: 1.5;
+      font-size: 12px;
+    }
+
+    .invoice-box {
+      max-width: 800px;
+      margin: auto;
+      min-height: 1100px;
+      position: relative;
+    }
+
+    .text-light { color: #424242; }
+    .text-right { text-align: right; }
+    .uppercase { text-transform: uppercase; }
+    .bold { font-weight: bold; }
+
+    /* ── Header ───────────────────────────────── */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+    .logo-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-img { height: 50px; width: auto; object-fit: contain; }
+    .logo-placeholder {
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+    .sender-info {
+      text-align: right;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+    .sender-name { margin-bottom: 4px; font-size: 12px; }
+
+    /* ── Meta line ────────────────────────────── */
+    .meta-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: #777;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .meta-sep { color: #ccc; }
+
+    /* ── Recipient + Title ────────────────────── */
+    .invoice-details {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .section-label {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+    .recipient-data { font-size: 11px; color: #424242; line-height: 1.6; }
+    .invoice-title { text-align: right; }
+    .invoice-title h1 {
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 0 0 10px 0;
+    }
+    .invoice-meta { font-size: 11px; color: #424242; line-height: 1.6; }
+
+    /* ── Subject ──────────────────────────────── */
+    .subject-section {
+      margin-bottom: 24px;
+    }
+    .subject-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #424242;
+      margin-bottom: 2px;
+    }
+    .subject-text { font-size: 12px; font-weight: bold; color: #333; }
+
+    /* ── Items table ──────────────────────────── */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th {
+      text-align: left;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding-bottom: 12px;
+      font-weight: normal;
+      color: #333;
+      border-bottom: 1px solid #eee;
+    }
+    td {
+      padding: 10px 0;
+      font-size: 12px;
+      color: #424242;
+      vertical-align: top;
+    }
+    td.item-desc { color: #555; }
+    .col-num { width: 5%; }
+    .col-desc { width: 35%; }
+    .col-unit { width: 12%; text-align: center; }
+    .col-qty { width: 10%; text-align: center; }
+    .col-rate { width: 10%; text-align: right; }
+    .col-amount { width: 15%; text-align: right; }
+    th.col-unit { text-align: center; }
+    th.col-qty { text-align: center; }
+    th.col-rate { text-align: right; }
+    th.col-amount { text-align: right; }
+    .item-desc-main { font-weight: bold; color: #555; font-size: 12px; }
+    .item-desc-tech {
+      font-size: 10px;
+      color: #aaa;
+      margin-top: 3px;
+      white-space: pre-line;
+      font-weight: normal;
+    }
+
+    /* ── Totals ───────────────────────────────── */
+    .totals-section {
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+      width: 45%;
+      margin-left: auto;
+      margin-bottom: 50px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 8px;
+      color: #424242;
+    }
+    .total-row.final {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #ddd;
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+    }
+    .total-amounts {
+      display: inline-flex;
+      gap: 16px;
+      align-items: baseline;
+    }
+    .total-pen {
+      color: #888;
+      font-size: 11px;
+      font-weight: normal;
+    }
+    .total-pen.final-pen {
+      font-size: 13px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    /* ── Conditions ───────────────────────────── */
+    .conditions-section { margin-bottom: 40px; }
+    .cond-item { margin-bottom: 14px; }
+    .cond-title {
+      font-weight: bold;
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 3px;
+    }
+    .cond-content {
+      font-size: 11px;
+      color: #424242;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    /* ── Bank accounts ────────────────────────── */
+    .bank-section { margin-bottom: 40px; }
+    .bank-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .bank-card {
+      flex: 1;
+      min-width: 200px;
+      border: 1px solid #eee;
+      padding: 12px 14px;
+      font-size: 11px;
+    }
+    .bank-name { font-weight: bold; color: #555; margin-bottom: 4px; }
+    .bank-detail { color: #424242; line-height: 1.7; }
+    .bank-detraccion { color: #c05621; font-weight: bold; margin-top: 4px; }
+
+    /* ── Prepared by ──────────────────────────── */
+    .prepared-section { margin-bottom: 40px; }
+    .prepared-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .prepared-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: #555;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .prepared-avatar img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .prepared-name { font-weight: bold; font-size: 12px; color: #333; }
+    .prepared-role { font-size: 11px; color: #424242; margin-top: 2px; }
+    .prepared-contact { font-size: 10px; color: #aaa; margin-top: 4px; }
+
+    /* ── Footer ───────────────────────────────── */
+    footer {
+      margin-top: 60px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+      text-align: center;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: #bbb;
+    }
+
+    /* ── Print button ─────────────────────────── */
+    .print-controls {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+    .btn-print {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #333;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 8px 16px;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .btn-print:hover { background: #555; }
+    .btn-back {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #666;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      padding: 8px 14px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-back:hover { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+
+  <!-- Print controls -->
+  <div class="print-controls no-print">
+    <button class="btn-print" onclick="window.print()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+      </svg>
+      {% trans "Imprimir / PDF" %}
+    </button>
+    <a href="{% url 'proformas:proforma_detail' proforma.pk %}" class="btn-back">
+      &larr; {% trans "Volver" %}
+    </a>
+  </div>
+
+  <div class="invoice-box">
+
+    <!-- ═══ Meta line (top bar) ═══ -->
+    <div class="meta-line">
+      <span>{% trans "Fecha" %}: {{ proforma.fecha_emision|date:"d/m/Y" }}</span>
+      <span class="meta-sep">&bull;</span>
+      <span>{% trans "Validez" %}: {{ proforma.validez_dias }} {% trans "dias" %} ({% trans "hasta" %} {{ proforma.fecha_vencimiento|date:"d/m/Y" }})</span>
+      {% if proforma.tc_venta %}
+      <span class="meta-sep">&bull;</span>
+      <span>T.C.: S/ {{ proforma.tc_venta }}</span>
+      {% endif %}
+    </div>
+
+    <!-- ═══ Header ═══ -->
+    <header>
+      <div class="logo-block">
+        {% if config.logo %}
+          <img src="{{ request.scheme }}://{{ request.get_host }}{{ config.logo.url }}"
+               alt="{{ config.nombre_empresa }}" class="logo-img">
+        {% else %}
+          <div class="logo-placeholder">{{ config.nombre_empresa|first|upper }}.</div>
+        {% endif %}
+      </div>
+      <div class="sender-info uppercase">
+        <div class="sender-name bold">{{ config.nombre_empresa }}</div>
+        <div class="text-light">
+          {% if config.ruc %}RUC {{ config.ruc }}<br>{% endif %}
+          {% if config.web %}{{ config.web }}<br>{% endif %}
+          {% if config.email %}{{ config.email }}<br>{% endif %}
+          {% if config.telefono %}{{ config.telefono }}{% endif %}
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══ Recipient + Proforma Title ═══ -->
+    <section class="invoice-details">
+      <div class="recipient">
+        <div class="section-label">{% trans "Dirigido a" %}</div>
+        <div class="recipient-data">
+          <strong style="color:#555;">{{ proforma.empresa.razon_social }}</strong><br>
+          {% if proforma.empresa.nombre_comercial %}{{ proforma.empresa.nombre_comercial }}<br>{% endif %}
+          RUC {{ proforma.empresa.ruc }}<br>
+          {% if proforma.contacto %}<br>Attn: {{ proforma.contacto.nombre }}{% if proforma.contacto.cargo %} &mdash; {{ proforma.contacto.cargo }}{% endif %}<br>{% endif %}
+          {% if proforma.sede %}{{ proforma.sede.nombre }}<br>{% endif %}
+        </div>
+      </div>
+      <div class="invoice-title">
+        <h1>{% trans "Proforma" %}</h1>
+        <div class="section-label">{% trans "Numero" %}</div>
+        <div class="invoice-meta">
+          {{ proforma.numero }}<br>
+          {% trans "Version" %} {{ proforma.version }}
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Subject ═══ -->
+    <div class="subject-section">
+      <div class="subject-label">{% trans "Asunto" %}</div>
+      <div class="subject-text">{{ proforma.titulo }}</div>
+    </div>
+
+    <!-- ═══ Items Table ═══ -->
+    <table>
+      <thead>
+        <tr>
+          <th class="col-num">#</th>
+          <th class="col-desc">{% trans "Descripcion" %}</th>
+          <th class="col-unit">{% trans "Und." %}</th>
+          <th class="col-qty">{% trans "Cant." %}</th>
+          <th class="col-rate">{% trans "P. Unit." %}</th>
+          <th class="col-amount">{% trans "Subtotal USD" %}</th>
+          {% if proforma.tc_venta %}
+          <th class="col-amount">{% trans "Subtotal S/" %}</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="item-desc">
+            <div class="item-desc-main">{{ item.descripcion }}</div>
+            {% if item.descripcion_tecnica %}
+            <div class="item-desc-tech">{{ item.descripcion_tecnica }}</div>
+            {% endif %}
+          </td>
+          <td class="col-unit">{{ item.get_unidad_display }}</td>
+          <td class="col-qty">{{ item.cantidad }}</td>
+          <td class="col-rate">${{ item.precio_usd }}</td>
+          <td class="col-amount">${{ item.subtotal_usd }}</td>
+          {% if proforma.tc_venta %}
+          <td class="col-amount">S/ {{ item.subtotal_pen }}</td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="{% if proforma.tc_venta %}7{% else %}6{% endif %}" style="text-align:center; padding:30px 0;">{% trans "Sin items" %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- ═══ Totals ═══ -->
+    <div class="totals-section">
+      <div class="total-row">
+        <span>{% trans "Subtotal" %}</span>
+        <span class="total-amounts">
+          ${{ proforma.subtotal_usd }}
+          {% if proforma.tc_venta %}<span class="total-pen">S/ {{ proforma.subtotal_pen }}</span>{% endif %}
+        </span>
+      </div>
+      {% if proforma.incluye_igv %}
+      <div class="total-row">
+        <span>IGV ({{ proforma.porcentaje_igv }}%)</span>
+        <span class="total-amounts">
+          ${{ proforma.igv_usd }}
+          {% if proforma.tc_venta %}<span class="total-pen">S/ {{ proforma.igv_pen }}</span>{% endif %}
+        </span>
+      </div>
+      {% endif %}
+      <div class="total-row final">
+        <span class="uppercase">Total</span>
+        <span class="total-amounts">
+          ${{ proforma.total_usd }}
+          {% if proforma.tc_venta %}<span class="total-pen final-pen">S/ {{ proforma.total_pen }}</span>{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <!-- ═══ Conditions ═══ -->
+    {% if condiciones %}
+    <div class="conditions-section">
+      <div class="section-label">{% trans "Condiciones comerciales" %}</div>
+      {% for cond in condiciones %}
+      <div class="cond-item">
+        <div class="cond-title">{{ cond.titulo }}</div>
+        <div class="cond-content">{{ cond.contenido }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ═══ Observations ═══ -->
+    {% if proforma.observaciones %}
+    <div class="conditions-section">
+      <div class="section-label">{% trans "Observaciones" %}</div>
+      <div class="cond-content">{{ proforma.observaciones }}</div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ Bank Accounts ═══ -->
+    {% if cuentas %}
+    <div class="bank-section">
+      <div class="section-label">{% trans "Datos bancarios" %}</div>
+      <div class="bank-grid">
+        {% for cuenta in cuentas %}
+        <div class="bank-card">
+          <div class="bank-name">{{ cuenta.get_banco_display }} &mdash; {{ cuenta.get_moneda_display }}</div>
+          <div class="bank-detail">
+            Cta: {{ cuenta.numero_cuenta }}<br>
+            {% if cuenta.cci %}CCI: {{ cuenta.cci }}<br>{% endif %}
+            {{ cuenta.titular }}
+          </div>
+          {% if cuenta.es_detraccion and cuenta.porcentaje_detraccion %}
+          <div class="bank-detraccion">{% trans "Detracciones" %} {{ cuenta.porcentaje_detraccion }}%</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    
+    <!-- ═══ Prepared by ═══ -->
+    {% if proforma.tecnico %}
+    <div class="prepared-section">
+      <div class="section-label">{% trans "Preparado por" %}</div>
+      <div class="prepared-info">
+        <div class="prepared-avatar">
+          {% if proforma.tecnico.foto %}
+            <img src="{{ request.scheme }}://{{ request.get_host }}{{ proforma.tecnico.foto.url }}" alt="">
+          {% else %}
+            {{ proforma.tecnico.first_name|first|upper }}{{ proforma.tecnico.last_name|first|upper }}
+          {% endif %}
+        </div>
+        <div>
+          <div class="prepared-name">{{ proforma.tecnico.get_full_name }}</div>
+          {% if proforma.tecnico.rol %}
+          <div class="prepared-role">{{ proforma.tecnico.get_rol_nombre }}</div>
+          {% endif %}
+          <div class="prepared-contact">
+            {% if proforma.tecnico.email %}{{ proforma.tecnico.email }}{% endif %}
+            {% if proforma.tecnico.email and proforma.tecnico.telefono %} &middot; {% endif %}
+            {% if proforma.tecnico.telefono %}{{ proforma.tecnico.telefono }}{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ Footer ═══ -->
+    <footer>
+      {{ config.nombre_empresa }} &nbsp;&bull;&nbsp; {{ proforma.numero }} v{{ proforma.version }} &nbsp;&bull;&nbsp; {{ proforma.fecha_emision|date:"d/m/Y" }}
+    </footer>
+
+  </div>
+
+</body>
+</html>

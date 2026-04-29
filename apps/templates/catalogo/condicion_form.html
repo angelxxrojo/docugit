@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ titulo }} — Gibit Tecnología{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'catalogo:condicion_list' %}" class="hover:text-blue-500">{% trans "Condiciones" %}</a> / {{ titulo }}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <h2 class="font-semibold text-gray-800">{{ titulo }}</h2>
+    </div>
+    <form method="post" class="px-6 py-6 space-y-5">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
+            {% trans "Nombre" %} <span class="text-red-500">*</span>
+          </label>
+          {{ form.nombre }}
+          {% if form.nombre.errors %}<p class="mt-1 text-xs text-red-600">{{ form.nombre.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Tipo" %} <span class="text-red-500">*</span></label>
+          {{ form.tipo }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+          {% trans "Contenido" %} <span class="text-red-500">*</span>
+        </label>
+        {{ form.contenido }}
+        <p class="text-xs text-gray-400 mt-1">{% trans "Este texto se insertará tal cual en la proforma." %}</p>
+        {% if form.contenido.errors %}<p class="mt-1 text-xs text-red-600">{{ form.contenido.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          {{ form.es_default }}
+          <div>
+            <label class="text-sm font-medium text-gray-700 cursor-pointer" for="{{ form.es_default.id_for_label }}">
+              {% trans "Incluir por defecto" %}
+            </label>
+            <p class="text-xs text-gray-500">{% trans "Se pre-seleccionará al crear una proforma." %}</p>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Orden de aparición" %}</label>
+          {{ form.orden }}
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        {{ form.activo }}
+        <label class="text-sm font-medium text-gray-700 cursor-pointer" for="{{ form.activo.id_for_label }}">
+          {% trans "Condición activa" %}
+        </label>
+        <p class="text-xs text-gray-500">{% trans "(las inactivas no se ofrecen al crear proformas)" %}</p>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+        <a href="{% url 'catalogo:condicion_list' %}"
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          {% trans "Cancelar" %}
+        </a>
+        <button type="submit"
+          class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+          {{ accion }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

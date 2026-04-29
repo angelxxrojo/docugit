@@ -1,0 +1,78 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Registrar tipo de cambio" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Registrar tipo de cambio" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'catalogo:index' %}" class="hover:text-blue-500">{% trans "Catálogo" %}</a> /
+  <a href="{% url 'catalogo:tipocambio_list' %}" class="hover:text-blue-500">{% trans "Tipos de cambio" %}</a> /
+  {% trans "Registrar" %}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-sm">
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <h2 class="font-semibold text-gray-800">{% trans "Registrar tipo de cambio" %}</h2>
+      <p class="text-xs text-gray-500 mt-0.5">
+        {% trans "Se registrará con la fecha y hora actual." %}
+      </p>
+    </div>
+    <form method="post" class="px-6 py-6 space-y-5">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+          {% trans "Moneda" %} <span class="text-red-500">*</span>
+        </label>
+        {{ form.moneda }}
+        {% if form.moneda.errors %}<p class="mt-1 text-xs text-red-600">{{ form.moneda.errors.0 }}</p>{% endif %}
+        <p class="text-xs text-gray-400 mt-1">
+          <a href="{% url 'catalogo:moneda_create' %}" class="text-blue-600 hover:text-blue-800">+ {% trans "Nueva moneda" %}</a>
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
+            {% trans "Compra" %} <span class="text-red-500">*</span>
+          </label>
+          {{ form.compra }}
+          {% if form.compra.errors %}<p class="mt-1 text-xs text-red-600">{{ form.compra.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
+            {% trans "Venta" %} <span class="text-red-500">*</span>
+          </label>
+          {{ form.venta }}
+          {% if form.venta.errors %}<p class="mt-1 text-xs text-red-600">{{ form.venta.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Nota" %}</label>
+        {{ form.nota }}
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+        <a href="{% url 'catalogo:tipocambio_list' %}"
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          {% trans "Cancelar" %}
+        </a>
+        <button type="submit"
+          class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+          {% trans "Registrar" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

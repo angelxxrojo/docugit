@@ -1,0 +1,46 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Archivar proyecto" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Archivar proyecto" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'proyectos:proyecto_list' %}" class="hover:text-blue-500">{% trans "Proyectos" %}</a>
+  / <a href="{% url 'proyectos:proyecto_detail' object.pk %}" class="hover:text-blue-500">{{ object.numero }}</a>
+  / {% trans "Archivar" %}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+  <div class="bg-white rounded-xl border border-red-200 overflow-hidden">
+    <div class="px-6 py-5 border-b border-red-100 bg-red-50 flex items-center gap-3">
+      <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      <h3 class="font-semibold text-red-700">{% trans "Confirmar archivo" %}</h3>
+    </div>
+    <div class="px-6 py-5">
+      <p class="text-sm text-gray-700 mb-2">
+        {% trans "¿Archivar el proyecto" %} <span class="font-mono font-semibold">{{ object.numero }}</span>?
+      </p>
+      <p class="text-sm text-gray-500 mb-5">
+        <strong>{{ object.titulo }}</strong><br>
+        {% trans "El proyecto quedará inactivo y no aparecerá en los listados. Esta acción es reversible desde el admin." %}
+      </p>
+      <form method="post" class="flex items-center justify-between">
+        {% csrf_token %}
+        <a href="{% url 'proyectos:proyecto_detail' object.pk %}"
+          class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+          ← {% trans "Cancelar" %}
+        </a>
+        <button type="submit"
+          class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">
+          {% trans "Sí, archivar proyecto" %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

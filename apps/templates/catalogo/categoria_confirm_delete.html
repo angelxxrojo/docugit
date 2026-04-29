@@ -1,0 +1,71 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Desactivar categoría" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Desactivar Categoría" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'catalogo:index' %}" class="hover:text-blue-500">{% trans "Catálogo" %}</a> /
+  <a href="{% url 'catalogo:categoria_list' %}" class="hover:text-blue-500">{% trans "Categorías" %}</a> /
+  {% trans "Desactivar" %}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+  <div class="bg-white rounded-xl border border-amber-200 overflow-hidden">
+
+    <div class="px-6 py-4 border-b border-amber-100 bg-amber-50">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="font-semibold text-gray-800">{% trans "Confirmar desactivación" %}</h2>
+          <p class="text-xs text-gray-500 mt-0.5">{% trans "Puedes reactivarla en cualquier momento desde editar." %}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-6">
+      <p class="text-sm text-gray-700 mb-4">
+        {% trans "¿Deseas desactivar la categoría" %}
+        <strong class="text-gray-900">{{ object.nombre }}</strong>?
+      </p>
+
+      {% with count=object.servicios.count %}
+      {% if count %}
+      <div class="flex items-start gap-2.5 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg px-4 py-3 mb-4">
+        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>
+          {% blocktrans count counter=count %}
+          Tiene {{ counter }} servicio asociado. Los servicios existentes no se verán afectados.
+          {% plural %}
+          Tiene {{ counter }} servicios asociados. Los servicios existentes no se verán afectados.
+          {% endblocktrans %}
+        </span>
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <form method="post" class="flex items-center justify-end gap-3 pt-2">
+        {% csrf_token %}
+        <a href="{% url 'catalogo:categoria_list' %}"
+          class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+          {% trans "Cancelar" %}
+        </a>
+        <button type="submit"
+          class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+          {% trans "Sí, desactivar" %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

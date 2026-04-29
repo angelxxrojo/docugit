@@ -1,0 +1,346 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ proforma.numero }} v{{ proforma.version }} — Gibit Tecnología{% endblock %}
+{% block page_title %}{{ proforma.numero }}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'proformas:proforma_list' %}" class="hover:text-blue-500">{% trans "Proformas" %}</a>
+  / {{ proforma.numero }}
+</p>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ showEstado: false, showNuevaVersion: false }">
+
+  <!-- Header bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div class="flex items-center gap-3 flex-wrap">
+      <h2 class="text-xl font-bold text-gray-900 font-mono">{{ proforma.numero }}</h2>
+      <span class="text-sm bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium">v{{ proforma.version }}</span>
+      <span class="text-xs px-2.5 py-1 rounded-full font-semibold {{ proforma.estado_badge_class }}">
+        {{ proforma.get_estado_display }}
+      </span>
+      {% if not proforma.es_vigente %}
+      <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">{% trans "No vigente" %}</span>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <!-- PDF -->
+      <a href="{% url 'proformas:proforma_pdf' proforma.pk %}" target="_blank"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+        </svg>
+        PDF
+      </a>
+
+      <!-- Editar -->
+      <a href="{% url 'proformas:proforma_update' proforma.pk %}"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+        </svg>
+        {% trans "Editar" %}
+      </a>
+
+      <!-- Cambiar estado -->
+      <div class="relative" x-data="{ open: false }">
+        <button @click="open = !open"
+          class="inline-flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+          {% trans "Estado" %}
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div x-show="open" @click.away="open = false" x-cloak
+          class="absolute right-0 mt-1 w-40 bg-white rounded-xl border border-gray-200 shadow-lg z-10 overflow-hidden py-1">
+          {% for value, label in proforma.ESTADO_CHOICES %}
+          {% if value != proforma.estado %}
+          <form method="post" action="{% url 'proformas:proforma_estado' proforma.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="estado" value="{{ value }}">
+            <button type="submit"
+              class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              {{ label }}
+            </button>
+          </form>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Nueva versión -->
+      <form method="post" action="{% url 'proformas:proforma_nueva_version' proforma.pk %}"
+        onsubmit="return confirm('¿Crear versión v{{ proforma.version|add:1 }}? La versión actual quedará archivada.')">
+        {% csrf_token %}
+        <button type="submit"
+          class="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-green-300 text-green-700 hover:bg-green-50 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          {% trans "Nueva versión" %}
+        </button>
+      </form>
+
+      <!-- Convertir a Proyecto (HU13) -->
+      {% if proforma.estado == 'aprobada' %}
+      <form method="post" action="{% url 'proyectos:desde_proforma' proforma.pk %}"
+        onsubmit="return confirm('¿Convertir esta proforma en un proyecto?')">
+        {% csrf_token %}
+        <button type="submit"
+          class="inline-flex items-center gap-1.5 px-3 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          {% trans "→ Proyecto" %}
+        </button>
+      </form>
+      {% endif %}
+
+      <!-- Desactivar -->
+      <a href="{% url 'proformas:proforma_delete' proforma.pk %}"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-amber-200 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+        </svg>
+        {% trans "Archivar" %}
+      </a>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Left: items + conditions -->
+    <div class="lg:col-span-2 space-y-5">
+      {% include 'proformas/partials/items_table.html' %}
+      {% include 'proformas/partials/condiciones_table.html' %}
+    </div>
+
+    <!-- Right: info sidebar -->
+    <div class="space-y-4">
+
+      <!-- Cliente info -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{% trans "Cliente" %}</h4>
+        <div class="space-y-2 text-sm">
+          <div>
+            <p class="font-semibold text-gray-900">{{ proforma.empresa.nombre_display }}</p>
+            <p class="text-xs text-gray-400">RUC {{ proforma.empresa.ruc }}</p>
+          </div>
+          {% if proforma.contacto %}
+          <div class="pt-2 border-t border-gray-50">
+            <p class="text-xs text-gray-400 mb-0.5">{% trans "Contacto" %}</p>
+            <p class="font-medium text-gray-800">{{ proforma.contacto.nombre }}</p>
+            <p class="text-xs text-gray-500">{{ proforma.contacto.cargo }}</p>
+            <a href="mailto:{{ proforma.contacto.correo }}" class="text-xs text-blue-600 hover:text-blue-800">
+              {{ proforma.contacto.correo }}
+            </a>
+          </div>
+          {% endif %}
+          {% if proforma.sede %}
+          <div class="pt-2 border-t border-gray-50">
+            <p class="text-xs text-gray-400 mb-0.5">{% trans "Sede" %}</p>
+            <p class="text-gray-700 text-xs">{{ proforma.sede.nombre }}</p>
+          </div>
+          {% endif %}
+          <div class="pt-2">
+            <a href="{% url 'clientes:empresa_detail' proforma.empresa.pk %}"
+              class="text-xs text-blue-600 hover:text-blue-800">{% trans "Ver empresa" %} →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalles de la proforma -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{% trans "Detalles" %}</h4>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-500">{% trans "Asunto" %}</span>
+            <span class="text-gray-800 text-right max-w-[160px] truncate" title="{{ proforma.titulo }}">{{ proforma.titulo }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">{% trans "Emisión" %}</span>
+            <span class="text-gray-800">{{ proforma.fecha_emision|date:"d/m/Y" }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">{% trans "Vencimiento" %}</span>
+            <span class="text-gray-800">{{ proforma.fecha_vencimiento|date:"d/m/Y" }}</span>
+          </div>
+          {% if proforma.tc_venta %}
+          <div class="flex justify-between">
+            <span class="text-gray-500">{% trans "T.C. venta" %}</span>
+            <span class="text-gray-800 font-mono">{{ proforma.tc_venta }}</span>
+          </div>
+          {% endif %}
+
+          <!-- Margen objetivo — edición inline -->
+          <div x-data="{ editando: false }" class="flex justify-between items-center">
+            <span class="text-gray-500">{% trans "Margen objetivo" %}</span>
+            <div x-show="!editando" class="flex items-center gap-1.5">
+              <span class="text-gray-800 font-mono font-medium">{{ proforma.margen_objetivo }}%</span>
+              <button @click="editando = true; $nextTick(() => $refs.inputMargen.select())"
+                class="p-0.5 text-gray-300 hover:text-blue-500 transition-colors rounded"
+                title="{% trans "Editar margen" %}">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+              </button>
+            </div>
+            <form x-show="editando" x-cloak
+              method="post" action="{% url 'proformas:proforma_margen' proforma.pk %}"
+              class="flex items-center gap-1" @keydown.escape="editando = false">
+              {% csrf_token %}
+              <input x-ref="inputMargen" type="number" name="margen_objetivo"
+                value="{{ proforma.margen_objetivo|stringformat:'.2f' }}"
+                step="0.5" min="0" max="500"
+                class="w-20 px-2 py-0.5 text-sm text-right font-mono border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <span class="text-xs text-gray-400">%</span>
+              <button type="submit"
+                class="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                title="{% trans "Guardar" %}">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </button>
+              <button type="button" @click="editando = false"
+                class="p-1 text-gray-300 hover:text-gray-500 hover:bg-gray-50 rounded transition-colors"
+                title="{% trans "Cancelar" %}">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </form>
+          </div>
+
+          <div class="flex justify-between">
+            <span class="text-gray-500">{% trans "IGV" %}</span>
+            <span class="text-gray-800">
+              {% if proforma.incluye_igv %}{{ proforma.porcentaje_igv }}%{% else %}{% trans "No incluye" %}{% endif %}
+            </span>
+          </div>
+          {% if proforma.observaciones %}
+          <div class="pt-2 border-t border-gray-50">
+            <p class="text-xs text-gray-400 mb-1">{% trans "Observaciones" %}</p>
+            <p class="text-xs text-gray-600">{{ proforma.observaciones }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Totales -->
+      {% include 'proformas/partials/totales.html' %}
+
+      <!-- Versiones -->
+      {% if versiones|length > 1 %}
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{% trans "Versiones" %}</h4>
+        <div class="space-y-1">
+          {% for v in versiones %}
+          <a href="{% url 'proformas:proforma_detail' v.pk %}"
+            class="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors
+              {% if v.pk == proforma.pk %}bg-blue-50 text-blue-700{% else %}hover:bg-gray-50 text-gray-600{% endif %}">
+            <span class="font-medium">v{{ v.version }}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs {{ v.estado_badge_class }} px-1.5 py-0.5 rounded-full">{{ v.get_estado_display }}</span>
+              {% if v.es_vigente %}
+              <span class="text-xs text-green-600">●</span>
+              {% endif %}
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function _setField(id, val, onlyIfEmpty) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (onlyIfEmpty && el.value) return;
+    el.value = val;
+  }
+
+  async function autoFillServicio(id) {
+    if (!id) return;
+    try {
+      const r = await fetch('/proformas/htmx/servicio/?servicio=' + id);
+      const d = await r.json();
+      if (d.descripcion)         _setField('item_descripcion', d.descripcion, true);
+      if (d.descripcion_tecnica) _setField('item_descripcion_tecnica', d.descripcion_tecnica, true);
+      if (d.unidad)              _setField('item_unidad', d.unidad, false);
+      // Costo: si tiene costo de subcontratista usa ese; si no, precio_usd es la referencia de costo
+      const costRef = d.costo || d.precio_usd;
+      const monedaRef = d.costo ? (d.moneda_costo || 'USD') : 'USD';
+      if (costRef) {
+        _setField('item_costo', costRef, false);
+        _setField('item_moneda_costo', monedaRef, false);
+      }
+      _setField('item_precio_usd', '', false); // siempre limpia → el margen calcula el precio
+      if (typeof window.recalcSugerido === 'function') window.recalcSugerido();
+    } catch(e) {}
+  }
+
+  // Producto: precio_usd del catálogo = precio de COSTO para Gibit → va a Costo Gibit
+  // El precio de venta se calcula con el margen
+  async function autoFillProducto(id) {
+    if (!id) return;
+    try {
+      const r = await fetch('/proformas/htmx/producto/?producto=' + id);
+      const d = await r.json();
+      if (d.descripcion)       _setField('item_descripcion', d.descripcion, false);
+      if (d.descripcion_tecnica) _setField('item_descripcion_tecnica', d.descripcion_tecnica, false);
+      if (d.unidad)             _setField('item_unidad', d.unidad, false);
+      // Para productos: precio_usd del catálogo = costo de compra
+      if (d.precio_usd) {
+        _setField('item_costo', d.precio_usd, false);
+        _setField('item_moneda_costo', d.moneda_costo || 'USD', false);
+        _setField('item_precio_usd', '', false); // se auto-calcula con el margen
+      }
+      if (typeof window.recalcSugerido === 'function') window.recalcSugerido();
+    } catch(e) {}
+  }
+
+  // Auto-fill condition form when a condicion_ref is selected
+  async function autoFillCondicion(id) {
+    if (!id) return;
+    try {
+      const r = await fetch('/proformas/htmx/condicion/?condicion=' + id);
+      const d = await r.json();
+      if (d.titulo) {
+        const el = document.getElementById('cond_titulo');
+        if (el) el.value = d.titulo;
+      }
+      if (d.contenido) {
+        const el = document.getElementById('cond_contenido');
+        if (el) el.value = d.contenido;
+      }
+    } catch(e) {}
+  }
+
+  // Re-attach auto-fill listeners after HTMX swap
+  document.body.addEventListener('htmx:afterSwap', function(e) {
+    const sel = document.getElementById('item_servicio');
+    if (sel) sel.onchange = () => autoFillServicio(sel.value);
+    const prod = document.getElementById('item_producto');
+    if (prod) prod.onchange = () => autoFillProducto(prod.value);
+    const cond = document.getElementById('cond_ref');
+    if (cond) cond.onchange = () => autoFillCondicion(cond.value);
+  });
+</script>
+{% endblock %}

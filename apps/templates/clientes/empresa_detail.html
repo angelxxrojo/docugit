@@ -1,0 +1,428 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ empresa.razon_social }} — Gibit Tecnología{% endblock %}
+{% block page_title %}{{ empresa.nombre_display }}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  CRM / <a href="{% url 'clientes:empresa_list' %}" class="hover:text-blue-500">{% trans "Empresas" %}</a>
+  / {{ empresa.razon_social }}
+</p>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ tab: '{{ active_tab|default:'sedes' }}' }">
+
+  <!-- Header empresa -->
+  <div class="bg-white rounded-xl border border-gray-200 p-6 mb-5">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">{{ empresa.razon_social }}</h2>
+          {% if empresa.nombre_comercial %}
+          <p class="text-sm text-gray-500">{{ empresa.nombre_comercial }}</p>
+          {% endif %}
+          <div class="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
+            <span class="flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+              </svg>
+              RUC {{ empresa.ruc }}
+            </span>
+            {% if empresa.sector %}
+            <span class="flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16"/>
+              </svg>
+              {{ empresa.sector }}
+            </span>
+            {% endif %}
+            {% if empresa.district or empresa.address %}
+            <span class="flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              {% if empresa.address %}{{ empresa.address }}{% if empresa.district %}, {% endif %}{% endif %}
+              {% if empresa.district %}{{ empresa.district.name }}{% endif %}
+              {% if empresa.department %} — {{ empresa.department.name }}{% endif %}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <a href="{% url 'clientes:empresa_update' empresa.pk %}"
+          class="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 text-gray-600
+            hover:bg-gray-50 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+          {% trans "Editar" %}
+        </a>
+        <a href="{% url 'clientes:empresa_delete' empresa.pk %}"
+          class="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-red-200 text-red-600
+            hover:bg-red-50 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          {% trans "Desactivar" %}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="border-b border-gray-200 mb-5">
+    <nav class="flex gap-1">
+      <button @click="tab = 'sedes'"
+        :class="tab === 'sedes' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors">
+        {% trans "Sedes" %}
+        <span class="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600">
+          {{ sedes_activas_count }}
+        </span>
+      </button>
+      <button @click="tab = 'contactos'"
+        :class="tab === 'contactos' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors">
+        {% trans "Contactos" %}
+        <span class="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-green-50 text-green-600">
+          {{ contactos_activos_count }}
+        </span>
+      </button>
+      <button @click="tab = 'proformas'"
+        :class="tab === 'proformas' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors">
+        {% trans "Proformas" %}
+        <span class="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-yellow-50 text-yellow-600">
+          {{ proformas_count }}
+        </span>
+      </button>
+      <button @click="tab = 'proyectos'"
+        :class="tab === 'proyectos' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors">
+        {% trans "Proyectos" %}
+        <span class="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600">
+          {{ proyectos_count }}
+        </span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ── Sedes ── -->
+  <div x-show="tab === 'sedes'">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-800">{% trans "Sedes de instalación" %}</h3>
+      <a href="{% url 'clientes:sede_create' empresa.pk %}"
+        class="inline-flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        {% trans "Agregar Sede" %}
+      </a>
+    </div>
+
+    {% if sedes %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for sede in sedes %}
+      <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition-shadow {% if not sede.activo %}opacity-50{% endif %}">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <h4 class="font-semibold text-gray-900 text-sm">{{ sede.nombre }}</h4>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              {% if sede.es_principal %}
+              <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{% trans "Principal" %}</span>
+              {% endif %}
+              {% if not sede.activo %}
+              <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{% trans "Inactiva" %}</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="flex gap-1">
+            <a href="{% url 'clientes:sede_update' empresa.pk sede.pk %}"
+              class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" title="{% trans "Editar" %}">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+            </a>
+            {% if sede.activo %}
+            <a href="{% url 'clientes:sede_delete' empresa.pk sede.pk %}"
+              class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="{% trans "Desactivar" %}">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+              </svg>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        <p class="text-xs text-gray-600">{{ sede.address }}</p>
+        <p class="text-xs text-gray-400 mt-1">
+          {% if sede.district %}{{ sede.district.name }}{% endif %}
+          {% if sede.province %}, {{ sede.province.name }}{% endif %}
+          {% if sede.department %} — {{ sede.department.name }}{% endif %}
+        </p>
+        {% if sede.referencia %}
+        <p class="text-xs text-gray-400 mt-1 italic">{{ sede.referencia }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-gray-200 py-12 text-center">
+      <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+      </svg>
+      <p class="text-gray-500 text-sm">{% trans "Aún no hay sedes registradas." %}</p>
+      <a href="{% url 'clientes:sede_create' empresa.pk %}"
+        class="inline-block mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+        + {% trans "Agregar primera sede" %}
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Contactos ── -->
+  <div x-show="tab === 'contactos'">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-800">{% trans "Contactos de la empresa" %}</h3>
+      <a href="{% url 'clientes:contacto_create' empresa.pk %}"
+        class="inline-flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        {% trans "Agregar Contacto" %}
+      </a>
+    </div>
+
+    {% if contactos %}
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 bg-gray-50">
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Nombre" %}</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{% trans "Cargo" %}</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">{% trans "Correo" %}</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">WhatsApp</th>
+            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">{% trans "Roles" %}</th>
+            <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Acciones" %}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for contacto in contactos %}
+          <tr class="hover:bg-gray-50 transition-colors {% if not contacto.activo %}opacity-50{% endif %}">
+            <td class="px-5 py-3.5">
+              <p class="font-medium text-gray-900">{{ contacto.nombre }}</p>
+              <div class="flex items-center gap-1 mt-0.5">
+                {% if contacto.es_principal %}
+                <span class="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">{% trans "Principal" %}</span>
+                {% endif %}
+                {% if not contacto.activo %}
+                <span class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{% trans "Inactivo" %}</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-5 py-3.5 text-gray-500 hidden sm:table-cell">{{ contacto.cargo }}</td>
+            <td class="px-5 py-3.5 hidden md:table-cell">
+              <a href="mailto:{{ contacto.correo }}" class="text-blue-600 hover:text-blue-800">
+                {{ contacto.correo }}
+              </a>
+            </td>
+            <td class="px-5 py-3.5 text-gray-500 hidden lg:table-cell">
+              <a href="https://wa.me/51{{ contacto.whatsapp }}" target="_blank" class="hover:text-green-600">
+                {{ contacto.whatsapp }}
+              </a>
+            </td>
+            <td class="px-5 py-3.5 text-center hidden md:table-cell">
+              <div class="flex items-center justify-center gap-1 flex-wrap">
+                {% if contacto.recibe_proforma %}
+                <span class="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full">{% trans "Proforma" %}</span>
+                {% endif %}
+                {% if contacto.recibe_informe %}
+                <span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">{% trans "Informe" %}</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-5 py-3.5">
+              <div class="flex items-center justify-end gap-2">
+                <a href="{% url 'clientes:contacto_update' empresa.pk contacto.pk %}"
+                  class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" title="{% trans "Editar" %}">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                  </svg>
+                </a>
+                {% if contacto.activo %}
+                <a href="{% url 'clientes:contacto_delete' empresa.pk contacto.pk %}"
+                  class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="{% trans "Desactivar" %}">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                  </svg>
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-gray-200 py-12 text-center">
+      <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      <p class="text-gray-500 text-sm">{% trans "Aún no hay contactos registrados." %}</p>
+      <a href="{% url 'clientes:contacto_create' empresa.pk %}"
+        class="inline-block mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+        + {% trans "Agregar primer contacto" %}
+      </a>
+    </div>
+    {% endif %}
+  </div>
+  <!-- ── Proformas ── -->
+  <div x-show="tab === 'proformas'">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-800">{% trans "Proformas de la empresa" %}</h3>
+      <a href="{% url 'proformas:proforma_create' %}?empresa={{ empresa.pk }}"
+        class="inline-flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        {% trans "Nueva proforma" %}
+      </a>
+    </div>
+
+    {% if proformas_empresa %}
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 bg-gray-50">
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Número" %}</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">{% trans "Asunto" %}</th>
+            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Estado" %}</th>
+            <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Total" %}</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">{% trans "Fecha" %}</th>
+            <th class="px-5 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for pf in proformas_empresa %}
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-5 py-3.5">
+              <span class="font-mono font-semibold text-blue-700">{{ pf.numero }}</span>
+              <span class="text-xs text-gray-400 ml-1">v{{ pf.version }}</span>
+            </td>
+            <td class="px-5 py-3.5 text-gray-600 hidden md:table-cell truncate max-w-xs">{{ pf.titulo }}</td>
+            <td class="px-5 py-3.5 text-center">
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ pf.estado_badge_class }}">
+                {{ pf.get_estado_display }}
+              </span>
+            </td>
+            <td class="px-5 py-3.5 text-right font-semibold text-gray-800">${{ pf.total_usd }}</td>
+            <td class="px-5 py-3.5 text-gray-400 text-xs hidden lg:table-cell">{{ pf.fecha_emision|date:"d/m/Y" }}</td>
+            <td class="px-5 py-3.5 text-right">
+              <a href="{% url 'proformas:proforma_detail' pf.pk %}"
+                class="text-xs text-blue-600 hover:text-blue-800 font-medium">{% trans "Ver" %} →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-gray-200 py-12 text-center">
+      <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+      </svg>
+      <p class="text-gray-500 text-sm">{% trans "Sin proformas para esta empresa." %}</p>
+      <a href="{% url 'proformas:proforma_create' %}?empresa={{ empresa.pk }}"
+        class="inline-block mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+        + {% trans "Crear primera proforma" %}
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Proyectos ── -->
+  <div x-show="tab === 'proyectos'">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-800">{% trans "Proyectos de la empresa" %}</h3>
+      <a href="{% url 'proyectos:proyecto_create' %}?empresa={{ empresa.pk }}"
+        class="inline-flex items-center gap-1.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        {% trans "Nuevo proyecto" %}
+      </a>
+    </div>
+
+    {% if proyectos_empresa %}
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 bg-gray-50">
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Número" %}</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">{% trans "Título" %}</th>
+            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Estado" %}</th>
+            <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{% trans "Valor" %}</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">{% trans "Inicio" %}</th>
+            <th class="px-5 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for proy in proyectos_empresa %}
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-5 py-3.5">
+              <span class="font-mono font-semibold text-indigo-700">{{ proy.numero }}</span>
+            </td>
+            <td class="px-5 py-3.5 text-gray-600 hidden md:table-cell truncate max-w-xs">{{ proy.titulo }}</td>
+            <td class="px-5 py-3.5 text-center">
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ proy.estado_badge_class }}">
+                {{ proy.get_estado_display }}
+              </span>
+            </td>
+            <td class="px-5 py-3.5 text-right font-semibold text-gray-800 hidden sm:table-cell">$ {{ proy.valor_usd }}</td>
+            <td class="px-5 py-3.5 text-gray-400 text-xs hidden lg:table-cell">
+              {{ proy.fecha_inicio|date:"d/m/Y"|default:"—" }}
+            </td>
+            <td class="px-5 py-3.5 text-right">
+              <a href="{% url 'proyectos:proyecto_detail' proy.pk %}"
+                class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">{% trans "Ver" %} →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-gray-200 py-12 text-center">
+      <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+      </svg>
+      <p class="text-gray-500 text-sm">{% trans "Sin proyectos para esta empresa." %}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  </div>
+
+</div>
+{% endblock %}

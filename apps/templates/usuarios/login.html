@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión — Gibit Tecnología</title>
+
+  <script src="{% static 'js/plugins/tailwind.cdn.js' %}"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Outfit', 'system-ui', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body class="h-full font-sans antialiased bg-login flex items-center justify-center p-4">
+
+<div class="w-full max-w-[380px]">
+
+  <!-- Logo mark -->
+  <div class="flex flex-col items-center mb-8">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+      style="background: linear-gradient(135deg, #2563EB, #1D4ED8); box-shadow: 0 0 24px rgba(37,99,235,0.4);">
+      <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+          d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+      </svg>
+    </div>
+    <h1 class="text-white font-semibold text-xl tracking-wide">Gibit Tecnología</h1>
+    <p class="text-[13px] mt-1" style="color: rgba(148,163,184,0.6)">Sistema de Gestión</p>
+  </div>
+
+  <!-- Card -->
+  <div class="login-card">
+
+    <div class="px-8 py-8">
+      <h2 class="text-[17px] font-semibold text-gray-900 mb-6">Iniciar Sesión</h2>
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          {{ form.non_field_errors.0 }}
+        </div>
+        {% endif %}
+
+        <div>
+          <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Usuario</label>
+          <input type="text" name="username" autofocus
+            class="block w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm
+              bg-gray-50 text-gray-900 placeholder-gray-400 transition-all
+              {% if form.username.errors %}border-red-400 bg-red-50{% endif %}"
+            placeholder="Tu nombre de usuario"
+            value="{{ form.username.value|default:'' }}">
+        </div>
+
+        <div>
+          <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Contraseña</label>
+          <input type="password" name="password"
+            class="block w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm
+              bg-gray-50 text-gray-900 placeholder-gray-400 transition-all"
+            placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="btn-login">
+          Ingresar al sistema
+        </button>
+      </form>
+    </div>
+
+    <!-- Footer del card -->
+    <div class="login-footer px-8 py-4 text-center">
+      <p class="text-[11px] text-gray-400">Solo para personal de Gibit Tecnología</p>
+    </div>
+
+  </div>
+
+  <p class="text-center mt-6 text-[11px]" style="color: rgba(100,116,139,0.5)">
+    Gibit Tecnología © {% now "Y" %}
+  </p>
+
+</div>
+</body>
+</html>

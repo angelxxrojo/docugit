@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contrato — {{ proyecto.numero }}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand: #1a3a5c;
+      --accent: #2563eb;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --bg-light: #f8fafc;
+    }
+
+    body {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 11pt;
+      color: var(--text);
+      background: white;
+      line-height: 1.7;
+    }
+
+    .page {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 56px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-bottom: 28px;
+      border-bottom: 2px solid var(--brand);
+      margin-bottom: 32px;
+    }
+    .header-brand h1 {
+      font-family: 'Inter', sans-serif;
+      font-size: 20pt;
+      font-weight: 600;
+      color: var(--brand);
+      letter-spacing: -0.5px;
+    }
+    .header-brand p {
+      font-family: 'Inter', sans-serif;
+      font-size: 8.5pt;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .header-meta {
+      text-align: right;
+      font-family: 'Inter', sans-serif;
+    }
+    .header-meta .numero {
+      font-size: 13pt;
+      font-weight: 600;
+      color: var(--brand);
+      font-family: monospace;
+    }
+    .header-meta .fecha {
+      font-size: 8.5pt;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Title block ── */
+    .contract-title {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .contract-title h2 {
+      font-size: 14pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--brand);
+    }
+    .contract-title .alcance {
+      font-size: 11pt;
+      color: var(--muted);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* ── Info grid ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 32px;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+    }
+    .info-item dt {
+      color: var(--muted);
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .info-item dd {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ── Sections ── */
+    .section {
+      margin-bottom: 28px;
+    }
+    .section h3 {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--brand);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+    }
+    .section p {
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+
+    /* ── Technicians table ── */
+    .tecnico-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+    }
+    .tecnico-table th {
+      text-align: left;
+      padding: 6px 10px;
+      background: var(--bg-light);
+      color: var(--muted);
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tecnico-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Value box ── */
+    .value-box {
+      background: var(--brand);
+      color: white;
+      border-radius: 6px;
+      padding: 18px 24px;
+      margin-bottom: 28px;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .value-box .label { font-size: 9pt; opacity: 0.8; }
+    .value-box .amount { font-size: 16pt; font-weight: 600; }
+    .value-box .sub-amounts { font-size: 8.5pt; opacity: 0.7; margin-top: 2px; }
+
+    /* ── Signature ── */
+    .signature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 48px;
+    }
+    .sig-block { text-align: center; }
+    .sig-line {
+      border-top: 1px solid var(--text);
+      margin-bottom: 8px;
+      margin-top: 60px;
+    }
+    .sig-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+      font-weight: 600;
+    }
+    .sig-role {
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: var(--muted);
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Inter', sans-serif;
+      font-size: 7.5pt;
+      color: var(--muted);
+    }
+
+    @media print {
+      body { font-size: 10pt; }
+      .page { padding: 32px 40px; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Print button (hidden on print) -->
+<div class="no-print" style="position:fixed;top:16px;right:16px;z-index:100;display:flex;gap:8px;">
+  <button onclick="window.print()"
+    style="padding:8px 16px;background:#1a3a5c;color:white;border:none;border-radius:6px;font-family:sans-serif;font-size:13px;cursor:pointer;font-weight:500;">
+    🖨 Imprimir
+  </button>
+  <a href="{% url 'proyectos:proyecto_detail' proyecto.pk %}"
+    style="padding:8px 16px;background:#f1f5f9;color:#374151;border:none;border-radius:6px;font-family:sans-serif;font-size:13px;cursor:pointer;text-decoration:none;font-weight:500;">
+    ← Volver
+  </a>
+</div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-brand">
+      <h1>Gibit Tecnología</h1>
+      <p>Seguridad electrónica • Automatización • CCTV</p>
+    </div>
+    <div class="header-meta">
+      <div class="numero">{{ proyecto.numero }}</div>
+      <div class="fecha">Lima, {{ proyecto.created_at|date:"d \d\e F \d\e Y" }}</div>
+    </div>
+  </div>
+
+  <!-- Contract title -->
+  <div class="contract-title">
+    <h2>Contrato de prestación de servicios</h2>
+    <div class="alcance">{{ proyecto.titulo }}</div>
+  </div>
+
+  <!-- Info grid -->
+  <div class="info-grid">
+    <div class="info-item">
+      <dt>Cliente</dt>
+      <dd>{{ proyecto.empresa.razon_social }}</dd>
+    </div>
+    <div class="info-item">
+      <dt>RUC</dt>
+      <dd>{{ proyecto.empresa.ruc }}</dd>
+    </div>
+    {% if proyecto.contacto %}
+    <div class="info-item">
+      <dt>Contacto</dt>
+      <dd>{{ proyecto.contacto.nombre }}{% if proyecto.contacto.cargo %} — {{ proyecto.contacto.cargo }}{% endif %}</dd>
+    </div>
+    {% endif %}
+    {% if proyecto.sede %}
+    <div class="info-item">
+      <dt>Sede / Dirección</dt>
+      <dd>{{ proyecto.sede.nombre }}</dd>
+    </div>
+    {% endif %}
+    {% if proyecto.fecha_inicio %}
+    <div class="info-item">
+      <dt>Fecha de inicio</dt>
+      <dd>{{ proyecto.fecha_inicio|date:"d/m/Y" }}</dd>
+    </div>
+    {% endif %}
+    {% if proyecto.fecha_fin_prevista %}
+    <div class="info-item">
+      <dt>Fecha fin prevista</dt>
+      <dd>{{ proyecto.fecha_fin_prevista|date:"d/m/Y" }}</dd>
+    </div>
+    {% endif %}
+    {% if proyecto.duracion_dias %}
+    <div class="info-item">
+      <dt>Duración estimada</dt>
+      <dd>{{ proyecto.duracion_dias }} días calendario</dd>
+    </div>
+    {% endif %}
+    {% if proyecto.proforma %}
+    <div class="info-item">
+      <dt>Proforma de referencia</dt>
+      <dd>{{ proyecto.proforma.numero }}</dd>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Value box -->
+  <div class="value-box">
+    <div>
+      <div class="label">Valor total del contrato</div>
+      <div class="sub-amounts">
+        {% if proyecto.tc_venta %}TC: S/ {{ proyecto.tc_venta }} | {% endif %}
+        Número de proyecto: {{ proyecto.numero }}
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div class="amount">$ {{ proyecto.valor_usd }}</div>
+      {% if proyecto.valor_pen %}
+      <div class="sub-amounts">S/ {{ proyecto.valor_pen }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Cláusulas / texto contrato -->
+  {% if proyecto.texto_contrato %}
+  <div class="section">
+    <h3>Alcance y condiciones</h3>
+    <div style="white-space: pre-wrap; text-align: justify;">{{ proyecto.texto_contrato }}</div>
+  </div>
+  {% else %}
+  <div class="section">
+    <h3>Cláusula primera — Objeto</h3>
+    <p>
+      La empresa <strong>Gibit Tecnología</strong> se compromete a ejecutar los servicios de
+      <em>{{ proyecto.titulo }}</em> en las instalaciones del cliente <strong>{{ proyecto.empresa.razon_social }}</strong>,
+      de acuerdo con las especificaciones técnicas detalladas en la proforma de referencia
+      {% if proyecto.proforma %}<strong>{{ proyecto.proforma.numero }}</strong>{% else %}adjunta{% endif %}.
+    </p>
+    <h3 style="margin-top:20px;">Cláusula segunda — Valor y condiciones de pago</h3>
+    <p>
+      El valor total del presente contrato asciende a la suma de
+      <strong>USD {{ proyecto.valor_usd }}</strong>
+      {% if proyecto.valor_pen %}(equivalente a S/ {{ proyecto.valor_pen }} al tipo de cambio de S/ {{ proyecto.tc_venta }}){% endif %},
+      pagaderos según las condiciones acordadas entre las partes.
+    </p>
+    <h3 style="margin-top:20px;">Cláusula tercera — Plazo de ejecución</h3>
+    <p>
+      {% if proyecto.fecha_inicio and proyecto.fecha_fin_prevista %}
+      Los trabajos se ejecutarán entre el <strong>{{ proyecto.fecha_inicio|date:"d/m/Y" }}</strong>
+      y el <strong>{{ proyecto.fecha_fin_prevista|date:"d/m/Y" }}</strong>
+      ({{ proyecto.duracion_dias }} días calendario), salvo fuerza mayor o acuerdo de prórroga.
+      {% else %}
+      El plazo de ejecución será acordado entre las partes al momento de la firma del presente contrato.
+      {% endif %}
+    </p>
+    <h3 style="margin-top:20px;">Cláusula cuarta — Garantía</h3>
+    <p>
+      Gibit Tecnología garantiza los equipos instalados y los trabajos ejecutados por el período indicado en la
+      propuesta técnica. La garantía no cubre daños causados por mal uso, actos de terceros o fuerza mayor.
+    </p>
+  </div>
+  {% endif %}
+
+  <!-- Técnicos asignados -->
+  {% if asignaciones %}
+  <div class="section">
+    <h3>Personal técnico asignado</h3>
+    <table class="tecnico-table">
+      <thead>
+        <tr>
+          <th>Técnico</th>
+          <th>Rol</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for asig in asignaciones %}
+        <tr>
+          <td>{{ asig.tecnico.get_full_name }}</td>
+          <td>{{ asig.tecnico.get_rol_display_badge }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- Cuentas bancarias -->
+  {% if cuentas %}
+  <div class="section">
+    <h3>Datos para el pago</h3>
+    <table class="tecnico-table">
+      <thead>
+        <tr>
+          <th>Banco</th>
+          <th>Moneda</th>
+          <th>Número de cuenta</th>
+          <th>CCI</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cuenta in cuentas %}
+        <tr>
+          <td>{{ cuenta.banco }}</td>
+          <td>{{ cuenta.get_moneda_display }}</td>
+          <td style="font-family:monospace;">{{ cuenta.numero }}</td>
+          <td style="font-family:monospace;">{{ cuenta.cci|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- Signatures -->
+  <div class="signature-grid">
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-name">{{ proyecto.empresa.razon_social }}</div>
+      <div class="sig-role">{% trans "El Cliente" %}</div>
+      {% if proyecto.contacto %}<div class="sig-role">{{ proyecto.contacto.nombre }}</div>{% endif %}
+    </div>
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-name">Gibit Tecnología S.A.C.</div>
+      <div class="sig-role">{% trans "El Prestador" %}</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>Gibit Tecnología — Documento generado el {% now "d/m/Y H:i" %}</span>
+    <span>{{ proyecto.numero }}</span>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,165 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ titulo_pagina }} — Gibit Tecnología{% endblock %}
+{% block page_title %}{{ titulo_pagina }}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'proformas:proforma_list' %}" class="hover:text-blue-500">{% trans "Proformas" %}</a> / {{ titulo_pagina }}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <h2 class="font-semibold text-gray-800">{{ titulo_pagina }}</h2>
+      <p class="text-xs text-gray-500 mt-0.5">{% trans "Los campos marcados con * son obligatorios." %}</p>
+    </div>
+
+    <form method="post" class="px-6 py-6 space-y-5">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+
+      <!-- Empresa -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+          {% trans "Empresa" %} <span class="text-red-500">*</span>
+        </label>
+        {{ form.empresa }}
+        {% if form.empresa.errors %}<p class="mt-1 text-xs text-red-600">{{ form.empresa.errors.0 }}</p>{% endif %}
+      </div>
+
+      <!-- Contacto + Sede (HTMX loaded) -->
+      <div id="contacto-sede-wrapper" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Contacto" %}</label>
+          {{ form.contacto }}
+          {% if form.contacto.errors %}<p class="mt-1 text-xs text-red-600">{{ form.contacto.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Sede" %}</label>
+          {{ form.sede }}
+          {% if form.sede.errors %}<p class="mt-1 text-xs text-red-600">{{ form.sede.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <!-- Asunto + Técnico responsable -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
+            {% trans "Asunto" %} <span class="text-red-500">*</span>
+          </label>
+          {{ form.titulo }}
+          {% if form.titulo.errors %}<p class="mt-1 text-xs text-red-600">{{ form.titulo.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Técnico / Responsable" %}</label>
+          {{ form.tecnico }}
+        </div>
+      </div>
+
+      <!-- Tipo de cambio + TC Venta + Margen objetivo -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Tipo de cambio" %}</label>
+          {{ form.tipo_cambio }}
+          {% if form.tipo_cambio.errors %}<p class="mt-1 text-xs text-red-600">{{ form.tipo_cambio.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "T.C. venta (USD→PEN)" %}</label>
+          {{ form.tc_venta }}
+          <p class="text-xs text-gray-400 mt-1">{% trans "Se auto-completa al elegir el tipo de cambio" %}</p>
+          {% if form.tc_venta.errors %}<p class="mt-1 text-xs text-red-600">{{ form.tc_venta.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
+            {% trans "Margen objetivo" %}
+            <span class="ml-1 text-xs text-gray-400 font-normal">(%)</span>
+          </label>
+          {{ form.margen_objetivo }}
+          <p class="text-xs text-gray-400 mt-1">Precio sugerido = costo × (1 + margen%)</p>
+          {% if form.margen_objetivo.errors %}<p class="mt-1 text-xs text-red-600">{{ form.margen_objetivo.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <!-- Fecha + Validez -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Fecha de emisión" %}</label>
+          {{ form.fecha_emision }}
+          {% if form.fecha_emision.errors %}<p class="mt-1 text-xs text-red-600">{{ form.fecha_emision.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Validez (días)" %}</label>
+          {{ form.validez_dias }}
+          {% if form.validez_dias.errors %}<p class="mt-1 text-xs text-red-600">{{ form.validez_dias.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <!-- IGV -->
+      <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+        <div class="flex items-center gap-3">
+          {{ form.incluye_igv }}
+          <label class="text-sm font-medium text-gray-700 cursor-pointer" for="{{ form.incluye_igv.id_for_label }}">
+            {% trans "Incluye IGV en los totales" %}
+          </label>
+        </div>
+        <div id="igv-pct-wrapper" {% if not form.instance.incluye_igv and not form.initial.incluye_igv %}class="hidden"{% endif %}>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Porcentaje IGV (%)" %}</label>
+          {{ form.porcentaje_igv }}
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">{% trans "Observaciones" %}</label>
+        {{ form.observaciones }}
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+        <a href="{% url 'proformas:proforma_list' %}"
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          {% trans "Cancelar" %}
+        </a>
+        <button type="submit"
+          class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+          {{ accion }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const tcMap = {{ tc_map|safe }};
+
+  function autoFillTC(id) {
+    const val = tcMap[String(id)];
+    const field = document.getElementById('id_tc_venta');
+    if (val && field) field.value = val;
+  }
+
+  function toggleIGV(checked) {
+    const wrapper = document.getElementById('igv-pct-wrapper');
+    if (wrapper) wrapper.classList.toggle('hidden', !checked);
+  }
+
+  // Auto-fill on page load if there's already a selected TC (edit mode)
+  document.addEventListener('DOMContentLoaded', function() {
+    const sel = document.getElementById('id_tipo_cambio');
+    if (sel && sel.value && !document.getElementById('id_tc_venta').value) {
+      autoFillTC(sel.value);
+    }
+    const igvChk = document.querySelector('[name="incluye_igv"]');
+    if (igvChk) toggleIGV(igvChk.checked);
+  });
+</script>
+{% endblock %}

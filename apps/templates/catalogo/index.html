@@ -1,0 +1,245 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Catálogo" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Catálogo de Servicios" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">{% trans "Catálogo" %}</p>
+{% endblock %}
+
+{% block content %}
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5 mb-8">
+
+  <!-- Categorías -->
+  <a href="{% url 'catalogo:categoria_list' %}"
+    class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+        <svg class="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/>
+        </svg>
+      </div>
+      <svg class="w-4 h-4 text-gray-300 group-hover:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </div>
+    <p class="text-3xl font-bold text-gray-900">{{ total_categorias }}</p>
+    <p class="text-sm text-gray-500 mt-1">{% trans "Categorías" %}</p>
+  </a>
+
+  <!-- Servicios -->
+  <a href="{% url 'catalogo:servicio_list' %}"
+    class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+        <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+      <svg class="w-4 h-4 text-gray-300 group-hover:text-blue-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </div>
+    <p class="text-3xl font-bold text-gray-900">{{ total_servicios }}</p>
+    <p class="text-sm text-gray-500 mt-1">{% trans "Servicios activos" %}</p>
+  </a>
+
+  <!-- Productos -->
+  <a href="{% url 'catalogo:producto_list' %}"
+    class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+        <svg class="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+      </div>
+      <svg class="w-4 h-4 text-gray-300 group-hover:text-orange-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </div>
+    <p class="text-3xl font-bold text-gray-900">{{ total_productos }}</p>
+    <p class="text-sm text-gray-500 mt-1">{% trans "Productos activos" %}</p>
+  </a>
+
+  <!-- Condiciones -->
+  <a href="{% url 'catalogo:condicion_list' %}"
+    class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+        <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <svg class="w-4 h-4 text-gray-300 group-hover:text-green-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </div>
+    <p class="text-3xl font-bold text-gray-900">{{ total_condiciones }}</p>
+    <p class="text-sm text-gray-500 mt-1">{% trans "Condiciones comerciales" %}</p>
+  </a>
+
+  <!-- Cuentas -->
+  <a href="{% url 'catalogo:cuenta_list' %}"
+    class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
+        <svg class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+        </svg>
+      </div>
+      <svg class="w-4 h-4 text-gray-300 group-hover:text-yellow-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </div>
+    <p class="text-3xl font-bold text-gray-900">{{ total_cuentas }}</p>
+    <p class="text-sm text-gray-500 mt-1">{% trans "Cuentas bancarias" %}</p>
+  </a>
+
+  <!-- Monedas -->
+  <a href="{% url 'catalogo:moneda_list' %}"
+    class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+        <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <svg class="w-4 h-4 text-gray-300 group-hover:text-purple-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </div>
+    <p class="text-3xl font-bold text-gray-900">{{ total_monedas }}</p>
+    <p class="text-sm text-gray-500 mt-1">{% trans "Monedas activas" %}</p>
+  </a>
+
+</div>
+
+<!-- Accesos rápidos -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+  <div class="bg-white rounded-xl border border-gray-200">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-800">{% trans "Categorías de servicio" %}</h3>
+      <a href="{% url 'catalogo:categoria_create' %}"
+        class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ {% trans "Nueva" %}</a>
+    </div>
+    <div class="px-5 py-4 text-sm text-gray-500">
+      <p>{% trans "Agrupa los servicios para facilitar su búsqueda al crear proformas." %}</p>
+      <a href="{% url 'catalogo:categoria_list' %}"
+        class="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium">
+        {% trans "Ver categorías" %} →
+      </a>
+    </div>
+  </div>
+
+
+  <div class="bg-white rounded-xl border border-gray-200">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-800">{% trans "Servicios del catálogo" %}</h3>
+      <a href="{% url 'catalogo:servicio_create' %}"
+        class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ {% trans "Nuevo" %}</a>
+    </div>
+    <div class="px-5 py-4 text-sm text-gray-500">
+      <p>{% trans "Gestiona los ítems que se incluyen en las proformas: descripción técnica, unidad y precio base en USD." %}</p>
+      <a href="{% url 'catalogo:servicio_list' %}"
+        class="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium">
+        {% trans "Ver catálogo" %} →
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-800">{% trans "Categorías de producto" %}</h3>
+      <a href="{% url 'catalogo:categoria_producto_create' %}"
+        class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ {% trans "Nueva" %}</a>
+    </div>
+    <div class="px-5 py-4 text-sm text-gray-500">
+      <p>{% trans "Agrupa los productos por tipo: Cámaras CCTV, Grabadores DVR, Redes, etc." %}</p>
+      <a href="{% url 'catalogo:categoria_producto_list' %}"
+        class="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium">
+        {% trans "Ver categorías" %} →
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-800">{% trans "Productos del catálogo" %}</h3>
+      <a href="{% url 'catalogo:producto_create' %}"
+        class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ {% trans "Nuevo" %}</a>
+    </div>
+    <div class="px-5 py-4 text-sm text-gray-500">
+      <p>{% trans "Equipos, materiales y accesorios con marca, modelo y precio base para incluir en proformas." %}</p>
+      <a href="{% url 'catalogo:producto_list' %}"
+        class="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium">
+        {% trans "Ver productos" %} →
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-800">{% trans "Condiciones comerciales" %}</h3>
+      <a href="{% url 'catalogo:condicion_create' %}"
+        class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ {% trans "Nueva" %}</a>
+    </div>
+    <div class="px-5 py-4 text-sm text-gray-500">
+      <p>{% trans "Bloques de texto reutilizables para adelantos, viáticos, plazos y garantías en proformas." %}</p>
+      <a href="{% url 'catalogo:condicion_list' %}"
+        class="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium">
+        {% trans "Ver condiciones" %} →
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-800">{% trans "Cuentas bancarias" %}</h3>
+      <a href="{% url 'catalogo:cuenta_create' %}"
+        class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ {% trans "Nueva" %}</a>
+    </div>
+    <div class="px-5 py-4 text-sm text-gray-500">
+      <p>{% trans "Datos bancarios y de detracción que aparecen en el pie de los documentos generados." %}</p>
+      <a href="{% url 'catalogo:cuenta_list' %}"
+        class="inline-block mt-3 text-blue-600 hover:text-blue-800 font-medium">
+        {% trans "Ver cuentas" %} →
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-800">{% trans "Tipos de cambio" %}</h3>
+      <a href="{% url 'catalogo:tipocambio_create' %}"
+        class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ {% trans "Registrar tasa" %}</a>
+    </div>
+    <div class="px-5 py-4 text-sm text-gray-500">
+      {% if tipos_vigentes %}
+      <div class="space-y-1 mb-3">
+        {% for tc in tipos_vigentes %}
+        <div class="flex items-center justify-between">
+          <span class="font-mono text-xs font-bold text-gray-600">{{ tc.moneda.codigo }}</span>
+          <span class="text-gray-800 font-medium">{{ tc.moneda.simbolo }}{{ tc.venta }} <span class="text-gray-400 text-xs font-normal">{% trans "venta" %}</span></span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="mb-3">{% trans "Sin tasas registradas. Registra el tipo de cambio para calcular precios en soles." %}</p>
+      {% endif %}
+      <a href="{% url 'catalogo:tipocambio_list' %}"
+        class="inline-block text-blue-600 hover:text-blue-800 font-medium">
+        {% trans "Ver historial" %} →
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

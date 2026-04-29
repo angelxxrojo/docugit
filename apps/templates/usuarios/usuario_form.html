@@ -1,0 +1,107 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ titulo_pagina }} — Gibit Tecnología{% endblock %}
+{% block page_title %}{{ titulo_pagina }}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'usuarios:usuario_list' %}" class="hover:text-blue-500">{% trans "Usuarios" %}</a>
+  / {{ titulo_pagina }}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <form method="post" class="space-y-5">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">
+      {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+    <!-- Datos personales -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-semibold text-gray-800 text-sm">{% trans "Datos personales" %}</h3>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Nombre" %} <span class="text-red-400">*</span></label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}<p class="mt-1 text-xs text-red-600">{{ form.first_name.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Apellidos" %} <span class="text-red-400">*</span></label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}<p class="mt-1 text-xs text-red-600">{{ form.last_name.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Correo electrónico" %}</label>
+            {{ form.email }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Teléfono" %}</label>
+            {{ form.telefono }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acceso -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-semibold text-gray-800 text-sm">{% trans "Acceso al sistema" %}</h3>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Usuario" %} <span class="text-red-400">*</span></label>
+            {{ form.username }}
+            {% if form.username.errors %}<p class="mt-1 text-xs text-red-600">{{ form.username.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Rol" %}</label>
+            {{ form.rol }}
+            <p class="mt-1 text-xs text-gray-400">
+              <a href="{% url 'usuarios:rol_list' %}" class="text-blue-500 hover:underline">{% trans "Ver y editar roles" %} →</a>
+            </p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Contraseña" %}</label>
+            {{ form.password1 }}
+            {% if form.password1.help_text %}<p class="mt-1 text-xs text-gray-400">{{ form.password1.help_text }}</p>{% endif %}
+            {% if form.password1.errors %}<p class="mt-1 text-xs text-red-600">{{ form.password1.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Confirmar contraseña" %}</label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}<p class="mt-1 text-xs text-red-600">{{ form.password2.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          {{ form.is_active }}
+          <label class="text-sm text-gray-700">{% trans "Usuario activo" %}</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex items-center justify-between">
+      <a href="{% url 'usuarios:usuario_list' %}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+        ← {% trans "Cancelar" %}
+      </a>
+      <button type="submit"
+        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+        {{ accion }}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

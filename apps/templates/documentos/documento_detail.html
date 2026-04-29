@@ -1,0 +1,152 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ doc.nombre }} — Gibit Tecnología{% endblock %}
+{% block page_title %}{{ doc.nombre }}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'documentos:documento_list' %}" class="hover:text-blue-500">Documentos</a> / {{ doc.nombre|truncatechars:40 }}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-5 items-start max-w-6xl">
+
+  <!-- ── Document preview ── -->
+  <div class="space-y-5">
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="font-semibold text-gray-800">{{ doc.nombre }}</h2>
+            <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{{ doc.get_tipo_label }}</span>
+          </div>
+          <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
+            {% if doc.plantilla_origen %}
+            <span>Plantilla: {{ doc.plantilla_origen.nombre }}</span>
+            {% endif %}
+            <span>Creado {{ doc.created_at|date:"d/m/Y H:i" }}</span>
+            {% if doc.creado_por %}<span>por {{ doc.creado_por.get_full_name }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="{% url 'documentos:documento_print' doc.pk %}" target="_blank"
+            class="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Imprimir / PDF
+          </a>
+          <a href="{% url 'documentos:documento_update' doc.pk %}"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+            Editar
+          </a>
+        </div>
+      </div>
+
+      <div class="px-8 py-8">
+        <div class="document-body text-gray-800 leading-relaxed">
+          {{ doc.cuerpo_html|safe }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Archive -->
+    <div class="flex items-center justify-between">
+      <form method="post" action="{% url 'documentos:documento_delete' doc.pk %}"
+        onsubmit="return confirm('¿Archivar este documento?')">
+        {% csrf_token %}
+        <button type="submit" class="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          Archivar documento
+        </button>
+      </form>
+      <a href="{% url 'documentos:documento_list' %}" class="text-sm text-gray-400 hover:text-gray-600">
+        ← Volver a documentos
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Right panel ── -->
+  <div class="space-y-4 sticky top-5">
+
+    <!-- Empresa info -->
+    {% if doc.empresa %}
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cliente</p>
+      </div>
+      <div class="px-4 py-3">
+        <a href="{% url 'clientes:empresa_detail' doc.empresa.pk %}"
+          class="text-sm font-medium text-gray-800 hover:text-blue-600 transition-colors">
+          {{ doc.empresa.razon_social }}
+        </a>
+        <p class="text-xs text-gray-400 mt-0.5">RUC {{ doc.empresa.ruc }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Vincular a proyecto -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Vincular a proyecto</p>
+        <p class="text-xs text-gray-400 mt-0.5">
+          {% if doc.proyecto %}
+          Vinculado a
+          <a href="{% url 'proyectos:proyecto_detail' doc.proyecto.pk %}" class="text-blue-500 hover:underline">
+            {{ doc.proyecto.numero }}
+          </a>
+          {% else %}
+          Sin proyecto asignado
+          {% endif %}
+        </p>
+      </div>
+      <form method="post" action="{% url 'documentos:documento_vincular' doc.pk %}" class="px-4 py-3 space-y-3">
+        {% csrf_token %}
+        <select name="proyecto"
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          <option value="">— Sin proyecto —</option>
+          {% for p in proyectos_disponibles %}
+          <option value="{{ p.pk }}" {% if doc.proyecto_id == p.pk %}selected{% endif %}>
+            {{ p.numero }} — {{ p.titulo|truncatechars:35 }}
+            {% if p.empresa %} ({{ p.empresa.razon_social|truncatechars:20 }}){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+        <button type="submit"
+          class="w-full px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium rounded-lg transition-colors">
+          {% if doc.proyecto %}Cambiar vínculo{% else %}Vincular{% endif %}
+        </button>
+        {% if doc.proyecto %}
+        <p class="text-center">
+          <button type="submit" name="proyecto" value=""
+            class="text-xs text-red-500 hover:text-red-700 transition-colors">
+            Desvincular del proyecto
+          </button>
+        </p>
+        {% endif %}
+      </form>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .document-body h1, .document-body h2, .document-body h3 {
+    font-weight: 600; margin-top: 1.4em; margin-bottom: 0.5em;
+  }
+  .document-body h1 { font-size: 1.25rem; }
+  .document-body h2 { font-size: 1.1rem; }
+  .document-body h3 { font-size: 1rem; }
+  .document-body p { margin-bottom: 0.75em; }
+  .document-body ul, .document-body ol { padding-left: 1.5rem; margin-bottom: 0.75em; }
+  .document-body li { margin-bottom: 0.25em; }
+  .document-body blockquote {
+    border-left: 3px solid #e5e7eb; padding-left: 1rem;
+    color: #6b7280; margin: 1em 0;
+  }
+</style>
+{% endblock %}

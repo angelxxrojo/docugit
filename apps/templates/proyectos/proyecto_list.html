@@ -1,0 +1,180 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Proyectos" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Proyectos" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">{% trans "Proyectos" %}</p>
+{% endblock %}
+
+{% block content %}
+
+<!-- Stat cards -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{% trans "Total" %}</p>
+    <p class="text-2xl font-bold text-gray-900">{{ totals.total }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+    <p class="text-xs font-semibold text-indigo-400 uppercase tracking-wide mb-1">{% trans "En curso" %}</p>
+    <p class="text-2xl font-bold text-indigo-700">{{ totals.activos }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+    <p class="text-xs font-semibold text-yellow-500 uppercase tracking-wide mb-1">{% trans "Pend. firma" %}</p>
+    <p class="text-2xl font-bold text-yellow-700">{{ totals.pendientes }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+    <p class="text-xs font-semibold text-green-500 uppercase tracking-wide mb-1">{% trans "Completados" %}</p>
+    <p class="text-2xl font-bold text-green-700">{{ totals.completados }}</p>
+  </div>
+</div>
+
+<!-- Header + CTA -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+  <h2 class="text-xl font-bold text-gray-900">{% trans "Proyectos" %}</h2>
+  <a href="{% url 'proyectos:proyecto_create' %}"
+    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    {% trans "Nuevo Proyecto" %}
+  </a>
+</div>
+
+<!-- Filtros -->
+<div class="bg-white rounded-xl border border-gray-200 mb-5">
+  <form method="get" class="flex flex-wrap items-center gap-3 px-4 py-3">
+    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+    </svg>
+    <input type="text" name="q" value="{{ q }}" placeholder="{% trans "Buscar por número, empresa o título…" %}"
+      class="flex-1 text-sm outline-none placeholder-gray-400 min-w-0">
+    <select name="estado" class="text-sm border-0 outline-none text-gray-600 bg-transparent cursor-pointer">
+      <option value="">{% trans "Todos los estados" %}</option>
+      {% for val, label in estado_choices %}
+      <option value="{{ val }}" {% if estado_filtro == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    {% if q or estado_filtro %}
+    <a href="{% url 'proyectos:proyecto_list' %}" class="text-xs text-gray-400 hover:text-gray-600">{% trans "Limpiar" %}</a>
+    {% endif %}
+    <button type="submit" class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-gray-600 transition-colors">
+      {% trans "Buscar" %}
+    </button>
+  </form>
+</div>
+
+{% if proyectos %}
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-gray-100 bg-gray-50">
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Proyecto" %}</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">{% trans "Empresa" %}</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">{% trans "Fechas" %}</th>
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{% trans "Valor" %}</th>
+        <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Estado" %}</th>
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Acciones" %}</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50">
+      {% for proy in proyectos %}
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-3.5">
+          <a href="{% url 'proyectos:proyecto_detail' proy.pk %}" class="font-mono font-medium text-blue-700 hover:underline">{{ proy.numero }}</a>
+          <p class="text-xs text-gray-500 truncate max-w-xs mt-0.5">{{ proy.titulo|truncatechars:60 }}</p>
+        </td>
+        <td class="px-5 py-3.5 hidden md:table-cell">
+          <p class="text-gray-900 font-medium">{{ proy.empresa.nombre_display }}</p>
+          {% if proy.contacto %}
+          <p class="text-xs text-gray-400">{{ proy.contacto.nombre }}</p>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3.5 text-gray-500 text-xs hidden lg:table-cell">
+          {% if proy.fecha_inicio %}
+          <p>Inicio: {{ proy.fecha_inicio|date:"d/m/Y" }}</p>
+          {% endif %}
+          {% if proy.fecha_fin_prevista %}
+          <p>Fin prev.: {{ proy.fecha_fin_prevista|date:"d/m/Y" }}</p>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3.5 text-right hidden sm:table-cell">
+          <p class="font-medium text-gray-900">$ {{ proy.valor_usd }}</p>
+          {% if proy.valor_pen %}
+          <p class="text-xs text-gray-400">S/ {{ proy.valor_pen }}</p>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3.5 text-center">
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ proy.estado_badge_class }}">
+            {{ proy.get_estado_display }}
+          </span>
+          {% if not proy.sctr_valido %}
+          <br><span class="text-xs text-red-500 mt-0.5 inline-block">⚠ SCTR</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3.5">
+          <div class="flex items-center justify-end gap-1">
+            <a href="{% url 'proyectos:proyecto_detail' proy.pk %}"
+              class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="{% trans "Ver" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </a>
+            <a href="{% url 'proyectos:proyecto_update' proy.pk %}"
+              class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" title="{% trans "Editar" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+            </a>
+            <a href="{% url 'proyectos:proyecto_contrato' proy.pk %}" target="_blank"
+              class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="{% trans "Contrato" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if is_paginated %}
+  <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+    <span>{% trans "Página" %} {{ page_obj.number }} {% trans "de" %} {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-1">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if estado_filtro %}&estado={{ estado_filtro }}{% endif %}"
+        class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">← {% trans "Anterior" %}</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if estado_filtro %}&estado={{ estado_filtro }}{% endif %}"
+        class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">{% trans "Siguiente" %} →</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% else %}
+<div class="bg-white rounded-xl border border-gray-200 py-16 text-center">
+  <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+  </svg>
+  {% if q or estado_filtro %}
+  <p class="text-gray-500 text-sm">{% trans "No hay proyectos con esos filtros." %}</p>
+  <a href="{% url 'proyectos:proyecto_list' %}" class="text-xs text-blue-500 hover:underline mt-1 inline-block">{% trans "Limpiar filtros" %}</a>
+  {% else %}
+  <p class="text-gray-500 text-sm">{% trans "Todavía no hay proyectos registrados." %}</p>
+  <a href="{% url 'proyectos:proyecto_create' %}"
+    class="inline-flex items-center gap-2 mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+    + {% trans "Crear primer proyecto" %}
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

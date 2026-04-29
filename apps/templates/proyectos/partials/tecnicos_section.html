@@ -1,0 +1,74 @@
+<div id="tecnicos-section" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <h3 class="font-semibold text-gray-800">{% trans "Técnicos asignados" %}</h3>
+      {% if not proyecto.sctr_valido %}
+      <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">
+        ⚠ SCTR pendiente
+      </span>
+      {% endif %}
+    </div>
+    <span class="text-xs text-gray-400">{{ asignaciones|length }}</span>
+  </div>
+
+  {% if asignaciones %}
+  <div class="divide-y divide-gray-50">
+    {% for asig in asignaciones %}
+    <div class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 group">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-xs font-bold">
+          {{ asig.tecnico.first_name|first|upper }}{{ asig.tecnico.last_name|first|upper }}
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-900">{{ asig.tecnico.get_full_name }}</p>
+          {% if asig.tecnico.rol %}
+          <span class="text-xs px-1.5 py-0.5 rounded-full font-medium {{ asig.tecnico.get_rol_display_badge }}">{{ asig.tecnico.get_rol_nombre }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        {% with sctr_vigente=proyecto.documentos.all %}
+        {% comment %}Check SCTR per technician{% endcomment %}
+        {% endwith %}
+        <form method="post"
+          action="{% url 'proyectos:tecnico_delete' proyecto.pk asig.pk %}"
+          hx-post="{% url 'proyectos:tecnico_delete' proyecto.pk asig.pk %}"
+          hx-target="#tecnicos-section"
+          hx-swap="outerHTML"
+          class="inline">
+          {% csrf_token %}
+          <button type="submit"
+            class="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-all text-xs"
+            title="{% trans "Quitar técnico" %}">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="px-5 py-6 text-center text-gray-400 text-sm">
+    {% trans "Sin técnicos asignados" %}
+  </div>
+  {% endif %}
+
+  <!-- Add technician form -->
+  <div class="border-t border-gray-100 px-5 py-3 bg-gray-50">
+    <form method="post"
+      action="{% url 'proyectos:tecnico_create' proyecto.pk %}"
+      hx-post="{% url 'proyectos:tecnico_create' proyecto.pk %}"
+      hx-target="#tecnicos-section"
+      hx-swap="outerHTML"
+      class="flex items-center gap-2">
+      {% csrf_token %}
+      <div class="flex-1">{{ tecnico_form.tecnico }}</div>
+      <button type="submit"
+        class="flex-shrink-0 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors">
+        + {% trans "Asignar" %}
+      </button>
+    </form>
+  </div>
+</div>

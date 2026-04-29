@@ -1,0 +1,454 @@
+<div id="items-section" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex items-center gap-3">
+      <h3 class="font-semibold text-gray-800">{% trans "Ítems de la proforma" %}</h3>
+      <span class="text-xs text-gray-400">{{ items|length }} {% trans "ítem(s)" %}</span>
+    </div>
+    {% if items %}
+    <button type="button" id="btn-toggle-costo"
+      onclick="toggleCostoView()"
+      class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors">
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      Ver rentabilidad
+    </button>
+    {% endif %}
+  </div>
+
+  {% if items %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-100 bg-gray-50">
+          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-8">#</th>
+          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">{% trans "Descripción" %}</th>
+          <th class="px-4 py-2.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wide w-20">{% trans "Und." %}</th>
+          <th class="px-4 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide w-20">{% trans "Cant." %}</th>
+          <!-- Columnas de costo (ocultas por defecto) -->
+          <th class="col-costo hidden px-4 py-2.5 text-right text-xs font-semibold text-amber-500 uppercase tracking-wide w-28">Costo Gibit</th>
+          <th class="col-costo hidden px-4 py-2.5 text-right text-xs font-semibold text-amber-500 uppercase tracking-wide w-20">Margen%</th>
+          <th class="col-costo hidden px-4 py-2.5 text-right text-xs font-semibold text-amber-500 uppercase tracking-wide w-28">Ganancia</th>
+          <!-- Columnas normales -->
+          <th class="px-4 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide w-28">{% trans "P. Unit." %}</th>
+          <th class="px-4 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide w-28">{% trans "Subtotal" %}</th>
+          <th class="px-4 py-2.5 w-10"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for item in items %}
+
+        {% if edit_item and edit_item.pk == item.pk %}
+        <!-- ── Fila editable ──────────────────────────────────────────── -->
+        <tr class="bg-blue-50 border-y border-blue-200">
+          <td class="px-4 py-3 text-gray-400 text-xs align-top pt-4">{{ forloop.counter }}</td>
+          <td colspan="8" class="px-4 py-3">
+            <form method="post"
+              action="{% url 'proformas:item_edit' proforma.pk item.pk %}"
+              hx-post="{% url 'proformas:item_edit' proforma.pk item.pk %}"
+              hx-target="#items-section"
+              hx-swap="outerHTML"
+              class="space-y-2.5">
+              {% csrf_token %}
+              <input type="hidden" name="servicio" value="{{ item.servicio_id|default:'' }}">
+              <input type="hidden" name="producto" value="{{ item.producto_id|default:'' }}">
+
+              <!-- Descripción + unidad + cantidad -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div class="sm:col-span-2">
+                  <label class="block text-xs text-gray-500 mb-0.5">{% trans "Descripción" %} <span class="text-red-400">*</span></label>
+                  {{ edit_form.descripcion }}
+                  {% if edit_form.descripcion.errors %}<p class="text-xs text-red-500 mt-0.5">{{ edit_form.descripcion.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-0.5">{% trans "Unidad" %}</label>
+                  {{ edit_form.unidad }}
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-0.5">{% trans "Cantidad" %} <span class="text-red-400">*</span></label>
+                  {{ edit_form.cantidad }}
+                  {% if edit_form.cantidad.errors %}<p class="text-xs text-red-500 mt-0.5">{{ edit_form.cantidad.errors.0 }}</p>{% endif %}
+                </div>
+              </div>
+
+              <!-- Costo + precio + acciones -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
+                <div>
+                  <label class="block text-xs text-gray-500 mb-0.5">{% trans "Costo Gibit" %}</label>
+                  <div class="flex gap-1">
+                    <div class="w-20 flex-shrink-0">{{ edit_form.moneda_costo }}</div>
+                    {{ edit_form.costo }}
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-0.5">{% trans "Precio USD" %} <span class="text-red-400">*</span></label>
+                  {{ edit_form.precio_usd }}
+                  {% if edit_form.precio_usd.errors %}<p class="text-xs text-red-500 mt-0.5">{{ edit_form.precio_usd.errors.0 }}</p>{% endif %}
+                </div>
+                <div class="sm:col-span-2 flex gap-2 justify-end items-end">
+                  <button type="submit"
+                    class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {% trans "Guardar" %}
+                  </button>
+                  <button type="button"
+                    hx-get="{% url 'proformas:item_edit_cancel' proforma.pk %}"
+                    hx-target="#items-section"
+                    hx-swap="outerHTML"
+                    class="px-4 py-1.5 text-xs text-gray-500 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors">
+                    {% trans "Cancelar" %}
+                  </button>
+                </div>
+              </div>
+
+              {% if item.descripcion_tecnica %}
+              <div>
+                <label class="block text-xs text-gray-500 mb-0.5">{% trans "Descripción técnica" %}</label>
+                {{ edit_form.descripcion_tecnica }}
+              </div>
+              {% endif %}
+            </form>
+          </td>
+          <td class="col-costo hidden"></td>
+          <td class="col-costo hidden"></td>
+        </tr>
+
+        {% else %}
+        <!-- ── Fila display ───────────────────────────────────────────── -->
+        {% with tc=proforma.tc_venta %}
+        <tr class="hover:bg-gray-50 group"
+          data-costo="{{ item.costo|default:'' }}"
+          data-moneda="{{ item.moneda_costo }}"
+          data-precio="{{ item.precio_usd }}"
+          data-cantidad="{{ item.cantidad }}">
+          <td class="px-4 py-3 text-gray-400 text-xs">{{ forloop.counter }}</td>
+          <td class="px-4 py-3">
+            <div class="flex items-start gap-1.5">
+              {% if item.producto %}
+              <span class="mt-0.5 flex-shrink-0 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-medium">P</span>
+              {% elif item.servicio %}
+              <span class="mt-0.5 flex-shrink-0 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">S</span>
+              {% endif %}
+              <div>
+                <p class="font-medium text-gray-900">{{ item.descripcion }}</p>
+                {% if item.descripcion_tecnica %}
+                <p class="text-xs text-gray-400 mt-0.5">{{ item.descripcion_tecnica|truncatechars:80 }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3 text-center text-xs text-gray-500">{{ item.get_unidad_display }}</td>
+          <td class="px-4 py-3 text-right text-gray-700">{{ item.cantidad }}</td>
+          <!-- Costo cols (hidden) -->
+          <td class="col-costo hidden px-4 py-3 text-right text-xs text-amber-700 font-medium">
+            {% if item.costo %}
+              {% if item.moneda_costo == 'PEN' %}S/{% else %}${% endif %}{{ item.costo }}
+            {% else %}
+              <span class="text-gray-300">—</span>
+            {% endif %}
+          </td>
+          <td class="col-costo hidden px-4 py-3 text-right text-xs font-semibold" id="margen_row_{{ item.pk }}">
+            {% if item.costo %}—{% else %}<span class="text-gray-300">—</span>{% endif %}
+          </td>
+          <td class="col-costo hidden px-4 py-3 text-right text-xs font-semibold" id="ganancia_row_{{ item.pk }}">
+            {% if item.costo %}—{% else %}<span class="text-gray-300">—</span>{% endif %}
+          </td>
+          <!-- Price cols -->
+          <td class="px-4 py-3 text-right text-gray-700">${{ item.precio_usd }}</td>
+          <td class="px-4 py-3 text-right font-semibold text-gray-900">${{ item.subtotal_usd }}</td>
+          <td class="px-4 py-3 text-center">
+            <div class="flex items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+              <button type="button"
+                hx-get="{% url 'proformas:item_edit' proforma.pk item.pk %}"
+                hx-target="#items-section"
+                hx-swap="outerHTML"
+                class="p-1 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
+                title="{% trans "Editar ítem" %}">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+              </button>
+              <form method="post"
+                action="{% url 'proformas:item_delete' proforma.pk item.pk %}"
+                hx-post="{% url 'proformas:item_delete' proforma.pk item.pk %}"
+                hx-target="#items-section"
+                hx-swap="outerHTML"
+                class="inline">
+                {% csrf_token %}
+                <button type="submit"
+                  class="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                  title="{% trans "Eliminar ítem" %}">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endwith %}
+        {% endif %}
+
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Resumen rentabilidad (oculto por defecto) -->
+  <div id="rentabilidad-summary" class="hidden border-t border-amber-100 bg-amber-50 px-5 py-3">
+    <div class="flex items-center gap-6 flex-wrap text-sm">
+      <div>
+        <p class="text-xs text-amber-600 font-medium uppercase tracking-wide">Costo total Gibit</p>
+        <p class="font-bold text-amber-800" id="summary-costo-total">$—</p>
+      </div>
+      <div>
+        <p class="text-xs text-amber-600 font-medium uppercase tracking-wide">Venta total</p>
+        <p class="font-bold text-gray-900" id="summary-venta-total">$—</p>
+      </div>
+      <div>
+        <p class="text-xs text-amber-600 font-medium uppercase tracking-wide">Ganancia bruta</p>
+        <p class="font-bold text-green-700" id="summary-ganancia">$—</p>
+      </div>
+      <div>
+        <p class="text-xs text-amber-600 font-medium uppercase tracking-wide">Margen real</p>
+        <p class="font-bold text-green-700" id="summary-margen">—%</p>
+      </div>
+      <p class="text-xs text-amber-500 ml-auto">Solo visible para Gibit — no aparece en el PDF</p>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="px-5 py-8 text-center text-gray-400 text-sm">
+    <svg class="w-8 h-8 text-gray-200 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
+    </svg>
+    {% trans "Aún no hay ítems. Agrega el primero abajo." %}
+  </div>
+  {% endif %}
+
+  <!-- Add item form -->
+  <div class="border-t border-gray-100 px-5 py-4 bg-gray-50">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{% trans "Agregar ítem" %}</p>
+    <form method="post"
+      action="{% url 'proformas:item_create' proforma.pk %}"
+      hx-post="{% url 'proformas:item_create' proforma.pk %}"
+      hx-target="#items-section"
+      hx-swap="outerHTML"
+      hx-on::after-request="if(event.detail.successful) this.reset()"
+      x-data="{
+        tipo: 'servicio',
+        setTipo(t) {
+          this.tipo = t;
+          if (t !== 'servicio') { var s = document.getElementById('item_servicio'); if (s) s.value = ''; }
+          if (t !== 'producto') { var p = document.getElementById('item_producto'); if (p) p.value = ''; }
+        }
+      }"
+      class="space-y-3">
+      {% csrf_token %}
+
+      {% if item_form.non_field_errors %}
+      <div class="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{{ item_form.non_field_errors }}</div>
+      {% endif %}
+
+      <!-- Tipo toggle -->
+      <div class="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+        <button type="button" @click="setTipo('servicio')"
+          :class="tipo === 'servicio' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'"
+          class="flex-1 py-1.5 px-3 font-medium transition-colors">{% trans "Servicio" %}</button>
+        <button type="button" @click="setTipo('producto')"
+          :class="tipo === 'producto' ? 'bg-orange-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'"
+          class="flex-1 py-1.5 px-3 font-medium transition-colors border-l border-gray-200">{% trans "Producto" %}</button>
+        <button type="button" @click="setTipo('personalizado')"
+          :class="tipo === 'personalizado' ? 'bg-gray-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'"
+          class="flex-1 py-1.5 px-3 font-medium transition-colors border-l border-gray-200">{% trans "Personalizado" %}</button>
+      </div>
+
+      <div x-show="tipo === 'servicio'">
+        <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Servicio del catálogo" %}</label>
+        {{ item_form.servicio }}
+      </div>
+      <div x-show="tipo === 'producto'">
+        <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Producto del catálogo" %}</label>
+        {{ item_form.producto }}
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Descripción" %} <span class="text-red-400">*</span></label>
+          {{ item_form.descripcion }}
+          {% if item_form.descripcion.errors %}<p class="mt-0.5 text-xs text-red-600">{{ item_form.descripcion.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Unidad" %}</label>
+          {{ item_form.unidad }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Descripción técnica" %} <span class="text-gray-400">({% trans "opcional" %})</span></label>
+        {{ item_form.descripcion_tecnica }}
+      </div>
+
+      <!-- Precio + Costo -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Cantidad" %} <span class="text-red-400">*</span></label>
+          {{ item_form.cantidad }}
+          {% if item_form.cantidad.errors %}<p class="mt-0.5 text-xs text-red-600">{{ item_form.cantidad.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">
+            {% trans "Costo Gibit" %}
+            <span class="text-gray-400 font-normal">(opcional)</span>
+          </label>
+          <div class="flex gap-1">
+            <div class="w-20 flex-shrink-0">{{ item_form.moneda_costo }}</div>
+            {{ item_form.costo }}
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">
+            {% trans "Precio sugerido" %}
+            <span class="text-gray-400 font-normal">({{ proforma.margen_objetivo }}%)</span>
+          </label>
+          <div id="precio-sugerido-display"
+            class="w-full px-3 py-2 text-sm border border-dashed border-gray-200 rounded-lg bg-gray-50 text-gray-400 font-mono">
+            —
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Precio USD" %} <span class="text-red-400">*</span></label>
+          {{ item_form.precio_usd }}
+          {% if item_form.precio_usd.errors %}<p class="mt-0.5 text-xs text-red-600">{{ item_form.precio_usd.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <!-- Margen actual en tiempo real -->
+      <div id="margen-actual-display" class="hidden text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+        Margen actual: <strong id="margen-actual-valor">—</strong>
+        &nbsp;·&nbsp; Ganancia unitaria: <strong id="ganancia-actual-valor">—</strong>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+          + {% trans "Agregar ítem" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  const TC = parseFloat("{{ proforma.tc_venta|default:'0' }}".replace(',', '.')) || 0;
+  const MARGEN = parseFloat("{{ proforma.margen_objetivo|default:'0' }}".replace(',', '.')) || 0;
+
+  // ── Cálculo de precio sugerido al escribir en el form ───────────────────
+  function recalcSugerido() {
+    const costo = parseFloat(document.getElementById('item_costo')?.value) || 0;
+    const moneda = document.getElementById('item_moneda_costo')?.value || 'USD';
+    const display = document.getElementById('precio-sugerido-display');
+    if (!display) return;
+
+    if (!costo) {
+      display.textContent = '—';
+      display.classList.add('text-gray-400');
+      display.classList.remove('text-blue-700', 'font-semibold');
+      return;
+    }
+
+    const costoUSD = moneda === 'PEN' && TC > 0 ? costo / TC : costo;
+    const sugerido = costoUSD * (1 + MARGEN / 100);
+    display.textContent = '$' + sugerido.toFixed(2);
+    display.classList.remove('text-gray-400');
+    display.classList.add('text-blue-700', 'font-semibold');
+
+    // Siempre sincroniza precio_usd con el sugerido (cost-driven)
+    // El usuario puede sobreescribir precio_usd directamente si quiere un precio distinto
+    const precioField = document.getElementById('item_precio_usd');
+    if (precioField) precioField.value = sugerido.toFixed(2);
+    recalcMargenActual();
+  }
+
+  function recalcMargenActual() {
+    const costo = parseFloat(document.getElementById('item_costo')?.value) || 0;
+    const moneda = document.getElementById('item_moneda_costo')?.value || 'USD';
+    const precio = parseFloat(document.getElementById('item_precio_usd')?.value) || 0;
+    const panel = document.getElementById('margen-actual-display');
+    if (!panel) return;
+
+    if (!costo || !precio) { panel.classList.add('hidden'); return; }
+
+    const costoUSD = moneda === 'PEN' && TC > 0 ? costo / TC : costo;
+    const margenPct = ((precio - costoUSD) / costoUSD) * 100;
+    const ganancia = precio - costoUSD;
+
+    document.getElementById('margen-actual-valor').textContent = margenPct.toFixed(1) + '%';
+    document.getElementById('ganancia-actual-valor').textContent = '$' + ganancia.toFixed(2);
+    panel.classList.remove('hidden');
+  }
+
+  // Exponemos las funciones para los oninput/onchange
+  window.recalcSugerido = recalcSugerido;
+  window.recalcMargenActual = recalcMargenActual;
+
+  // ── Toggle vista rentabilidad en la tabla ────────────────────────────────
+  let costoVisible = false;
+  window.toggleCostoView = function() {
+    costoVisible = !costoVisible;
+    document.querySelectorAll('.col-costo').forEach(el => {
+      el.classList.toggle('hidden', !costoVisible);
+    });
+    document.getElementById('rentabilidad-summary')?.classList.toggle('hidden', !costoVisible);
+    const btn = document.getElementById('btn-toggle-costo');
+    if (btn) btn.textContent = costoVisible ? 'Ocultar rentabilidad' : 'Ver rentabilidad';
+    if (costoVisible) calcRentabilidadTabla();
+  };
+
+  function calcRentabilidadTabla() {
+    let costoTotal = 0, ventaTotal = 0, tieneAlgunCosto = false;
+
+    document.querySelectorAll('#items-section tbody tr[data-precio]').forEach(row => {
+      const costo = parseFloat(row.dataset.costo) || 0;
+      const moneda = row.dataset.moneda || 'USD';
+      const precio = parseFloat(row.dataset.precio) || 0;
+      const cantidad = parseFloat(row.dataset.cantidad) || 1;
+      const pk = row.querySelector('[id^="margen_row_"]')?.id?.replace('margen_row_', '');
+
+      ventaTotal += precio * cantidad;
+
+      if (costo > 0) {
+        tieneAlgunCosto = true;
+        const costoUSD = moneda === 'PEN' && TC > 0 ? costo / TC : costo;
+        costoTotal += costoUSD * cantidad;
+
+        const margenPct = ((precio - costoUSD) / costoUSD) * 100;
+        const ganancia = (precio - costoUSD) * cantidad;
+
+        if (pk) {
+          const mEl = document.getElementById('margen_row_' + pk);
+          const gEl = document.getElementById('ganancia_row_' + pk);
+          const color = margenPct >= 0 ? 'text-green-600' : 'text-red-600';
+          if (mEl) { mEl.innerHTML = '<span class="' + color + '">' + margenPct.toFixed(1) + '%</span>'; }
+          if (gEl) { gEl.innerHTML = '<span class="' + color + '">$' + ganancia.toFixed(2) + '</span>'; }
+        }
+      }
+    });
+
+    if (tieneAlgunCosto) {
+      const gananciaTotal = ventaTotal - costoTotal;
+      const margenGlobal = costoTotal > 0 ? (gananciaTotal / costoTotal) * 100 : 0;
+      document.getElementById('summary-costo-total').textContent = '$' + costoTotal.toFixed(2);
+      document.getElementById('summary-venta-total').textContent = '$' + ventaTotal.toFixed(2);
+      document.getElementById('summary-ganancia').textContent = '$' + gananciaTotal.toFixed(2);
+      document.getElementById('summary-margen').textContent = margenGlobal.toFixed(1) + '%';
+    }
+  }
+
+})();
+</script>

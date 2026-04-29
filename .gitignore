@@ -1,0 +1,6 @@
+.env
+venv/
+.claude/
+.log
+*.sqlite3
+media/

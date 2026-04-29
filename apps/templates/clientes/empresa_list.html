@@ -1,0 +1,161 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Empresas" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Gestión de Clientes" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">CRM / {% trans "Empresas" %}</p>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header acciones -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <div>
+    <h2 class="text-xl font-bold text-gray-900">{% trans "Empresas" %}</h2>
+    <p class="text-sm text-gray-500">{{ total }} empresa{{ total|pluralize }} registrada{{ total|pluralize }}</p>
+  </div>
+  <a href="{% url 'clientes:empresa_create' %}"
+    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    {% trans "Nueva Empresa" %}
+  </a>
+</div>
+
+<!-- Buscador -->
+<div class="bg-white rounded-xl border border-gray-200 mb-5">
+  <form method="get" class="flex items-center gap-3 px-4 py-3">
+    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+    </svg>
+    <input type="text" name="q" value="{{ q }}" placeholder="{% trans "Buscar por RUC, razón social o nombre comercial…" %}"
+      class="flex-1 text-sm outline-none placeholder-gray-400">
+    {% if q %}
+    <a href="{% url 'clientes:empresa_list' %}" class="text-xs text-gray-400 hover:text-gray-600">
+      {% trans "Limpiar" %}
+    </a>
+    {% endif %}
+    <button type="submit" class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-gray-600 transition-colors">
+      {% trans "Buscar" %}
+    </button>
+  </form>
+</div>
+
+<!-- Tabla -->
+{% if empresas %}
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-gray-100 bg-gray-50">
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">RUC</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Razón Social" %}</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">{% trans "Sector" %}</th>
+        <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{% trans "Sedes" %}</th>
+        <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{% trans "Contactos" %}</th>
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Acciones" %}</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50">
+      {% for empresa in empresas %}
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-3.5 font-mono text-xs text-gray-600">{{ empresa.ruc }}</td>
+        <td class="px-5 py-3.5">
+          <a href="{% url 'clientes:empresa_detail' empresa.pk %}"
+            class="font-medium text-gray-900 hover:text-blue-600 transition-colors">
+            {{ empresa.razon_social }}
+          </a>
+          {% if empresa.nombre_comercial %}
+          <p class="text-xs text-gray-400">{{ empresa.nombre_comercial }}</p>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3.5 text-gray-500 hidden md:table-cell">
+          {{ empresa.sector|default:"—" }}
+        </td>
+        <td class="px-5 py-3.5 text-center hidden sm:table-cell">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+            {{ empresa.num_sedes }}
+          </span>
+        </td>
+        <td class="px-5 py-3.5 text-center hidden sm:table-cell">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-50 text-green-700 text-xs font-medium">
+            {{ empresa.num_contactos }}
+          </span>
+        </td>
+        <td class="px-5 py-3.5">
+          <div class="flex items-center justify-end gap-2">
+            <a href="{% url 'clientes:empresa_detail' empresa.pk %}"
+              class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="{% trans "Ver detalle" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </a>
+            <a href="{% url 'clientes:empresa_update' empresa.pk %}"
+              class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" title="{% trans "Editar" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+            </a>
+            <a href="{% url 'clientes:empresa_delete' empresa.pk %}"
+              class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="{% trans "Desactivar" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Paginación -->
+  {% if is_paginated %}
+  <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+    <span>{% trans "Página" %} {{ page_obj.number }} {% trans "de" %} {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-1">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}"
+        class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">← {% trans "Anterior" %}</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}"
+        class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">{% trans "Siguiente" %} →</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% else %}
+<!-- Estado vacío -->
+<div class="bg-white rounded-xl border border-gray-200 py-16 text-center">
+  <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+    <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
+    </svg>
+  </div>
+  {% if q %}
+  <h3 class="text-gray-600 font-medium">{% trans "No se encontraron resultados para" %} "{{ q }}"</h3>
+  <p class="text-gray-400 text-sm mt-1">{% trans "Intenta con otro término de búsqueda." %}</p>
+  <a href="{% url 'clientes:empresa_list' %}" class="inline-block mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium">
+    {% trans "Limpiar búsqueda" %}
+  </a>
+  {% else %}
+  <h3 class="text-gray-600 font-medium">{% trans "Aún no hay empresas registradas" %}</h3>
+  <p class="text-gray-400 text-sm mt-1">{% trans "Comienza registrando tu primer cliente." %}</p>
+  <a href="{% url 'clientes:empresa_create' %}"
+    class="inline-flex items-center gap-2 mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    {% trans "Nueva Empresa" %}
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

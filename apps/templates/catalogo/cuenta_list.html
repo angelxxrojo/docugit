@@ -1,0 +1,115 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Cuentas Bancarias" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Cuentas Bancarias" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'catalogo:index' %}" class="hover:text-blue-500">{% trans "Catálogo" %}</a> / {% trans "Cuentas" %}
+</p>
+{% endblock %}
+
+{% block content %}
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <div>
+    <h2 class="text-xl font-bold text-gray-900">{% trans "Cuentas Bancarias" %}</h2>
+    <p class="text-xs text-gray-500 mt-0.5">{% trans "Aparecen en el pie de los documentos generados." %}</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <a href="?mostrar={% if mostrar == 'todos' %}activas{% else %}todos{% endif %}"
+      class="text-sm text-gray-500 hover:text-gray-700">
+      {% if mostrar == 'todos' %}{% trans "Ocultar inactivas" %}{% else %}{% trans "Ver todas" %}{% endif %}
+    </a>
+    <a href="{% url 'catalogo:cuenta_create' %}"
+      class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      {% trans "Nueva Cuenta" %}
+    </a>
+  </div>
+</div>
+
+{% if cuentas %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {% for c in cuentas %}
+  <div class="bg-white rounded-xl border border-gray-200 p-5 {% if not c.activo %}opacity-60{% endif %}">
+    <div class="flex items-start justify-between mb-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center
+          {% if c.es_detraccion %}bg-orange-100{% else %}bg-blue-100{% endif %}">
+          <svg class="w-5 h-5 {% if c.es_detraccion %}text-orange-600{% else %}text-blue-600{% endif %}"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 text-sm">{{ c.get_banco_display }}</p>
+          <div class="flex gap-2 mt-0.5">
+            <span class="text-xs px-1.5 py-0.5 rounded-full
+              {% if c.moneda == 'PEN' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+              {{ c.get_moneda_display }}
+            </span>
+            {% if c.es_detraccion %}
+            <span class="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">{% trans "Detracciones" %}</span>
+            {% endif %}
+            {% if not c.activo %}
+            <span class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{% trans "Inactiva" %}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-1">
+        <a href="{% url 'catalogo:cuenta_update' c.pk %}"
+          class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+        </a>
+        <a href="{% url 'catalogo:cuenta_delete' c.pk %}"
+          class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="space-y-1 text-sm">
+      <div class="flex justify-between">
+        <span class="text-gray-500">{% trans "N° Cuenta" %}:</span>
+        <span class="font-mono text-gray-900">{{ c.numero_cuenta }}</span>
+      </div>
+      {% if c.cci %}
+      <div class="flex justify-between">
+        <span class="text-gray-500">CCI:</span>
+        <span class="font-mono text-gray-900">{{ c.cci }}</span>
+      </div>
+      {% endif %}
+      <div class="flex justify-between">
+        <span class="text-gray-500">{% trans "Titular" %}:</span>
+        <span class="text-gray-900">{{ c.titular }}</span>
+      </div>
+      {% if c.es_detraccion and c.porcentaje_detraccion %}
+      <div class="flex justify-between">
+        <span class="text-gray-500">{% trans "% Detracción" %}:</span>
+        <span class="text-orange-700 font-medium">{{ c.porcentaje_detraccion }}%</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-xl border border-gray-200 py-16 text-center">
+  <p class="text-gray-500 text-sm">{% trans "No hay cuentas bancarias registradas." %}</p>
+  <a href="{% url 'catalogo:cuenta_create' %}"
+    class="inline-flex items-center gap-2 mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg">
+    + {% trans "Agregar cuenta" %}
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}

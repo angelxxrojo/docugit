@@ -1,0 +1,76 @@
+<div id="condiciones-section" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+    <h3 class="font-semibold text-gray-800">{% trans "Condiciones comerciales" %}</h3>
+    <span class="text-xs text-gray-400">{{ condiciones|length }} {% trans "condición(es)" %}</span>
+  </div>
+
+  {% if condiciones %}
+  <div class="divide-y divide-gray-50">
+    {% for cond in condiciones %}
+    <div class="px-5 py-4 group relative">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-800">{{ cond.titulo }}</p>
+          <p class="text-sm text-gray-600 mt-1 whitespace-pre-line">{{ cond.contenido }}</p>
+        </div>
+        <form method="post"
+          action="{% url 'proformas:condicion_delete' proforma.pk cond.pk %}"
+          hx-post="{% url 'proformas:condicion_delete' proforma.pk cond.pk %}"
+          hx-target="#condiciones-section"
+          hx-swap="outerHTML"
+          class="flex-shrink-0">
+          {% csrf_token %}
+          <button type="submit"
+            class="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-all"
+            title="{% trans "Eliminar condición" %}">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="px-5 py-8 text-center text-gray-400 text-sm">
+    {% trans "Sin condiciones. Agrega desde el catálogo o escribe una personalizada." %}
+  </div>
+  {% endif %}
+
+  <!-- Add condition form -->
+  <div class="border-t border-gray-100 px-5 py-4 bg-gray-50">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{% trans "Agregar condición" %}</p>
+    <form method="post"
+      action="{% url 'proformas:condicion_create' proforma.pk %}"
+      hx-post="{% url 'proformas:condicion_create' proforma.pk %}"
+      hx-target="#condiciones-section"
+      hx-swap="outerHTML"
+      hx-on::after-request="if(event.detail.successful) this.reset()"
+      class="space-y-3">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Del catálogo" %} <span class="text-gray-400">({% trans "opcional" %})</span></label>
+        {{ condicion_form.condicion_ref }}
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Título" %} <span class="text-red-400">*</span></label>
+        {{ condicion_form.titulo }}
+        {% if condicion_form.titulo.errors %}<p class="mt-0.5 text-xs text-red-600">{{ condicion_form.titulo.errors.0 }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Contenido" %} <span class="text-red-400">*</span></label>
+        {{ condicion_form.contenido }}
+        {% if condicion_form.contenido.errors %}<p class="mt-0.5 text-xs text-red-600">{{ condicion_form.contenido.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit"
+          class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">
+          + {% trans "Agregar condición" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

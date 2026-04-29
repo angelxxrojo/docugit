@@ -1,0 +1,144 @@
+{% load i18n %}
+
+<!-- Frappe Gantt CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+<script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+
+<style>
+  /* Color bars por estado */
+  .gantt-bar-pendiente   .bar { fill: #9ca3af !important; }
+  .gantt-bar-en_progreso .bar { fill: #3b82f6 !important; }
+  .gantt-bar-en_revision .bar { fill: #f59e0b !important; }
+  .gantt-bar-completado  .bar { fill: #22c55e !important; }
+  .gantt-bar-cancelado   .bar { fill: #ef4444 !important; }
+
+  .gantt-bar-pendiente   .bar-progress { fill: #6b7280 !important; }
+  .gantt-bar-en_progreso .bar-progress { fill: #2563eb !important; }
+  .gantt-bar-en_revision .bar-progress { fill: #d97706 !important; }
+  .gantt-bar-completado  .bar-progress { fill: #16a34a !important; }
+  .gantt-bar-cancelado   .bar-progress { fill: #dc2626 !important; }
+
+  #gantt-container svg { font-family: inherit; }
+  .gantt .grid-header { fill: #f9fafb; }
+  .gantt .grid-row:nth-child(even) { fill: #f9fafb; }
+  .gantt .today-highlight { fill: #eff6ff; opacity: 0.5; }
+</style>
+
+<!-- Toolbar -->
+<div class="flex items-center justify-between mb-4">
+  <div class="flex items-center gap-2">
+    <!-- Leyenda -->
+    <div class="flex items-center gap-3 text-xs text-gray-500">
+      <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-gray-400 inline-block"></span> Pendiente</span>
+      <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-blue-500 inline-block"></span> En progreso</span>
+      <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-amber-400 inline-block"></span> En revisión</span>
+      <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-green-500 inline-block"></span> Completado</span>
+    </div>
+  </div>
+  <!-- View mode -->
+  <div class="flex rounded-lg border border-gray-200 overflow-hidden text-xs" id="gantt-mode-btns">
+    <button onclick="setGanttMode('Day')"
+      class="gantt-mode-btn px-3 py-1.5 text-gray-600 hover:bg-gray-50 transition-colors border-r border-gray-200" data-mode="Day">Día</button>
+    <button onclick="setGanttMode('Week')"
+      class="gantt-mode-btn px-3 py-1.5 text-gray-600 hover:bg-gray-50 transition-colors border-r border-gray-200 bg-blue-50 text-blue-700 font-medium" data-mode="Week">Semana</button>
+    <button onclick="setGanttMode('Month')"
+      class="gantt-mode-btn px-3 py-1.5 text-gray-600 hover:bg-gray-50 transition-colors border-r border-gray-200" data-mode="Month">Mes</button>
+    <button onclick="setGanttMode('Quarter Day')"
+      class="gantt-mode-btn px-3 py-1.5 text-gray-600 hover:bg-gray-50 transition-colors" data-mode="Quarter Day">Trimestre</button>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div id="gantt-container" class="overflow-x-auto p-2 min-h-[200px] flex items-center justify-center">
+    <p class="text-sm text-gray-400" id="gantt-empty-msg">Cargando actividades…</p>
+  </div>
+</div>
+
+<!-- Nota: arrastra los extremos de cada barra para cambiar las fechas -->
+<p class="mt-2 text-xs text-gray-400 text-right">
+  Arrastra los extremos de una barra para ajustar fechas · Haz clic en una barra para ver el detalle
+</p>
+
+<script>
+(function () {
+  const PROYECTO_PK = {{ proyecto.pk }};
+  const GANTT_URL   = '/proyectos/' + PROYECTO_PK + '/gantt/';
+  const FECHAS_BASE = '/proyectos/' + PROYECTO_PK + '/actividades/';
+  const CSRF        = () => document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+  let _gantt = null;
+  let _currentMode = 'Week';
+
+  // Formatea Date → 'YYYY-MM-DD' en zona local (evita desfase UTC)
+  function fmtDate(d) {
+    return d.getFullYear() + '-' +
+           String(d.getMonth() + 1).padStart(2, '0') + '-' +
+           String(d.getDate()).padStart(2, '0');
+  }
+
+  window.initGantt = function () {
+    fetch(GANTT_URL)
+      .then(r => r.json())
+      .then(data => {
+        const tasks     = data.tasks || [];
+        const container = document.getElementById('gantt-container');
+        const emptyMsg  = document.getElementById('gantt-empty-msg');
+
+        if (!tasks.length) {
+          if (emptyMsg) emptyMsg.textContent = 'No hay actividades con fechas asignadas. Asigna fechas de inicio/vencimiento desde el Kanban.';
+          return;
+        }
+
+        if (emptyMsg) emptyMsg.remove();
+
+        _gantt = new Gantt('#gantt-container', tasks, {
+          view_mode:     _currentMode,
+          date_format:   'YYYY-MM-DD',
+          popup_trigger: null,
+
+          on_click: function (task) {
+            // Carga el panel de edición (igual que click en tarjeta Kanban)
+            htmx.ajax('GET', '/proyectos/' + PROYECTO_PK + '/actividades/' + task.id + '/', {
+              target: '#actividad-panel-content',
+              swap:   'innerHTML',
+            });
+            // Despacha desde el contenedor del Gantt para que burbujee al x-data padre
+            container.dispatchEvent(new CustomEvent('open-panel', { bubbles: true }));
+          },
+
+          on_date_change: function (task, start, end) {
+            // start/end son objetos Date — formateamos en zona local
+            fetch(FECHAS_BASE + task.id + '/fechas/', {
+              method:  'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken':  CSRF(),
+              },
+              body: JSON.stringify({ start: fmtDate(start), end: fmtDate(end) }),
+            });
+          },
+
+          on_progress_change: function (task, progress) {},
+        });
+      })
+      .catch(() => {
+        const emptyMsg = document.getElementById('gantt-empty-msg');
+        if (emptyMsg) emptyMsg.textContent = 'Error al cargar las actividades.';
+      });
+  };
+
+  window.setGanttMode = function (mode) {
+    _currentMode = mode;
+    if (_gantt) _gantt.change_view_mode(mode);
+    // Update button styles
+    document.querySelectorAll('.gantt-mode-btn').forEach(btn => {
+      const active = btn.dataset.mode === mode;
+      btn.classList.toggle('bg-blue-50',     active);
+      btn.classList.toggle('text-blue-700',  active);
+      btn.classList.toggle('font-medium',    active);
+      btn.classList.toggle('text-gray-600',  !active);
+    });
+  };
+})();
+</script>

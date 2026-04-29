@@ -1,0 +1,209 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ titulo_pagina }} — Gibit Tecnología{% endblock %}
+{% block page_title %}{{ titulo_pagina }}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'documentos:plantilla_list' %}" class="hover:text-blue-500">Plantillas</a> / {{ titulo_pagina }}
+</p>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jodit@latest/es2021/jodit.fat.min.css">
+<style>
+  /* Fondo gris tipo "escritorio" alrededor de la página */
+  .jodit-container:not(.jodit_fullsize) .jodit-workplace { background: #e8ecf0; padding: 1.5rem; }
+  /* Área editable = hoja A4 centrada */
+  .jodit-wysiwyg {
+    background: #fff !important;
+    padding: 2cm 2.5cm !important;
+    min-height: 620px;
+    width: 21cm;
+    max-width: 100%;
+    margin: 0 auto;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.10);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .variable-chip { cursor: pointer; transition: all 0.15s; }
+  .variable-chip:hover { transform: translateY(-1px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5 items-start">
+
+  <!-- ── Main form ── -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <h2 class="font-semibold text-gray-800">{{ titulo_pagina }}</h2>
+      <p class="text-xs text-gray-500 mt-0.5">Usa <code class="bg-gray-200 px-1 rounded text-xs">&#123;&#123;variable&#125;&#125;</code> para insertar datos automáticos al generar el documento.</p>
+    </div>
+
+    <form method="post" id="plantilla-form" novalidate class="px-6 py-6 space-y-5">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+
+      <!-- Nombre + Tipo -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Nombre <span class="text-red-500">*</span></label>
+          {{ form.nombre }}
+          {% if form.nombre.errors %}<p class="mt-1 text-xs text-red-600">{{ form.nombre.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Tipo <span class="text-red-500">*</span></label>
+          {{ form.tipo }}
+          {% if form.tipo.errors %}<p class="mt-1 text-xs text-red-600">{{ form.tipo.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Descripción</label>
+        {{ form.descripcion }}
+      </div>
+
+      <!-- Jodit Editor -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Contenido <span class="text-red-500">*</span></label>
+        {{ form.cuerpo_html }}
+        {% if form.cuerpo_html.errors %}<p class="mt-1 text-xs text-red-600">{{ form.cuerpo_html.errors.0 }}</p>{% endif %}
+      </div>
+
+      <!-- Predeterminada -->
+      <div class="flex items-center gap-3">
+        {{ form.es_predeterminada }}
+        <label class="text-sm font-medium text-gray-700 cursor-pointer" for="{{ form.es_predeterminada.id_for_label }}">
+          Marcar como plantilla predeterminada para este tipo
+        </label>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+        <a href="{% url 'documentos:plantilla_list' %}"
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          Cancelar
+        </a>
+        <button type="submit"
+          class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+          {{ accion }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── Variable reference panel ── -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden sticky top-5">
+    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+      <h3 class="text-sm font-semibold text-gray-700">Variables disponibles</h3>
+      <p class="text-xs text-gray-400 mt-0.5">Clic para insertar en el cursor</p>
+    </div>
+    <div class="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+
+      <!-- Empresa -->
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Empresa (Gibit)</p>
+        <div class="flex flex-wrap gap-1.5">
+          {% for var, label in variables %}
+          {% if var|slice:":7" == "empresa" %}
+          <button type="button"
+            onclick="insertVariable('{{ var }}')"
+            class="variable-chip px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs font-mono"
+            title="{{ label }}">&#123;&#123;{{ var }}&#125;&#125;</button>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Cliente -->
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Cliente</p>
+        <div class="flex flex-wrap gap-1.5">
+          {% for var, label in variables %}
+          {% if var|slice:":7" == "cliente" %}
+          <button type="button"
+            onclick="insertVariable('{{ var }}')"
+            class="variable-chip px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-xs font-mono"
+            title="{{ label }}">&#123;&#123;{{ var }}&#125;&#125;</button>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Proyecto -->
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Proyecto</p>
+        <div class="flex flex-wrap gap-1.5">
+          {% for var, label in variables %}
+          {% if var|slice:":8" == "proyecto" or var|slice:":5" == "monto" or var|slice:":2" == "tc" or var|slice:":5" == "fecha" or var|slice:":8" == "duracion" or var|slice:":7" == "tecnico" %}
+          <button type="button"
+            onclick="insertVariable('{{ var }}')"
+            class="variable-chip px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-xs font-mono"
+            title="{{ label }}">&#123;&#123;{{ var }}&#125;&#125;</button>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Generales -->
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Generales</p>
+        <div class="flex flex-wrap gap-1.5">
+          {% for var, label in variables %}
+          {% if var == "fecha_hoy" or var == "anio_actual" %}
+          <button type="button"
+            onclick="insertVariable('{{ var }}')"
+            class="variable-chip px-2 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded text-xs font-mono"
+            title="{{ label }}">&#123;&#123;{{ var }}&#125;&#125;</button>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-gray-100">
+        <p class="text-xs text-gray-400">Las variables sin datos aparecerán vacías en el documento generado.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jodit@latest/es2021/jodit.fat.min.js"></script>
+<script>
+  const editor = Jodit.make('[name="cuerpo_html"]', {
+    height: 680,
+    toolbarSticky: true,
+    toolbarStickyOffset: 60,
+    askBeforePasteFromWord: false,
+    askBeforePasteHTML: false,
+    processPasteFromWord: true,
+    defaultActionOnPasteFromWord: 'insert_as_html',
+    defaultActionOnPaste: 'insert_as_html',
+    buttons: [
+      'paragraph', 'bold', 'italic', 'underline', 'strikethrough', '|',
+      'brush', 'font', 'fontsize', '|',
+      'align', '|',
+      'ul', 'ol', 'outdent', 'indent', '|',
+      'superscript', 'subscript', '|',
+      'table', 'hr', 'link', '|',
+      'undo', 'redo', '|',
+      'eraser', 'fullsize', 'source',
+    ],
+    uploader: { insertImageAsBase64URI: true },
+    disablePlugins: ['speech-recognize'],
+  });
+  window._jodit = editor;
+
+  function insertVariable(varName) {
+    if (window._jodit) window._jodit.s.insertHTML('{{' + varName + '}}');
+  }
+</script>
+{% endblock %}

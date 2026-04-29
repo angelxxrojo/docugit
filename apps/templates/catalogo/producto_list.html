@@ -1,0 +1,166 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Productos" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Catálogo de Productos" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'catalogo:index' %}" class="hover:text-blue-500">{% trans "Catálogo" %}</a> / {% trans "Productos" %}
+</p>
+{% endblock %}
+
+{% block content %}
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <div>
+    <h2 class="text-xl font-bold text-gray-900">{% trans "Productos" %}</h2>
+    {% if tipo_cambio %}
+    <p class="text-xs text-gray-400 mt-0.5">
+      {% trans "TC vigente:" %} S/ {{ tipo_cambio.venta }}
+    </p>
+    {% endif %}
+  </div>
+  <a href="{% url 'catalogo:producto_create' %}"
+    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    {% trans "Nuevo Producto" %}
+  </a>
+</div>
+
+<!-- Filtros -->
+<div class="bg-white rounded-xl border border-gray-200 mb-5">
+  <form method="get" class="flex flex-wrap items-center gap-3 px-4 py-3">
+    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+    </svg>
+    <input type="text" name="q" value="{{ q }}" placeholder="{% trans "Buscar por nombre, marca o modelo…" %}"
+      class="flex-1 text-sm outline-none placeholder-gray-400 min-w-0">
+    {% if categorias %}
+    <select name="categoria" class="text-sm border-0 outline-none text-gray-600 bg-transparent cursor-pointer">
+      <option value="">{% trans "Todas las categorías" %}</option>
+      {% for cat in categorias %}
+      <option value="{{ cat.pk }}" {% if categoria_filtro == cat.pk|stringformat:"s" %}selected{% endif %}>
+        {{ cat.nombre }}
+      </option>
+      {% endfor %}
+    </select>
+    {% endif %}
+    <label class="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
+      <input type="checkbox" name="mostrar" value="todos" {% if mostrar == 'todos' %}checked{% endif %}
+        class="h-3.5 w-3.5 rounded border-gray-300 text-blue-600">
+      {% trans "Mostrar inactivos" %}
+    </label>
+    {% if q or categoria_filtro %}
+    <a href="{% url 'catalogo:producto_list' %}" class="text-xs text-gray-400 hover:text-gray-600">{% trans "Limpiar" %}</a>
+    {% endif %}
+    <button type="submit" class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-gray-600 transition-colors">
+      {% trans "Buscar" %}
+    </button>
+  </form>
+</div>
+
+{% if productos %}
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-gray-100 bg-gray-50">
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Producto" %}</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">{% trans "Categoría" %}</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">{% trans "Marca / Modelo" %}</th>
+        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{% trans "Unidad" %}</th>
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Precio USD" %}</th>
+        {% if tipo_cambio %}
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">{% trans "Precio PEN" %}</th>
+        {% endif %}
+        <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">{% trans "Estado" %}</th>
+        <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{% trans "Acciones" %}</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-50">
+      {% for p in productos %}
+      <tr class="hover:bg-gray-50 transition-colors {% if not p.activo %}opacity-50{% endif %}">
+        <td class="px-5 py-3.5">
+          <p class="font-medium text-gray-900">{{ p.nombre }}</p>
+          {% if p.descripcion %}
+          <p class="text-xs text-gray-400 truncate max-w-xs">{{ p.descripcion|truncatechars:55 }}</p>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3.5 text-gray-500 hidden md:table-cell">{{ p.categoria|default:"—" }}</td>
+        <td class="px-5 py-3.5 hidden lg:table-cell">
+          {% if p.marca %}<span class="text-gray-700 font-medium">{{ p.marca }}</span>{% endif %}
+          {% if p.modelo %}<span class="font-mono text-xs text-gray-400 ml-1">[{{ p.modelo }}]</span>{% endif %}
+          {% if not p.marca and not p.modelo %}—{% endif %}
+        </td>
+        <td class="px-5 py-3.5 text-gray-500 hidden sm:table-cell">{{ p.get_unidad_display }}</td>
+        <td class="px-5 py-3.5 text-right font-medium text-gray-900">$ {{ p.precio_usd }}</td>
+        {% if tipo_cambio %}
+        <td class="px-5 py-3.5 text-right text-gray-500 hidden lg:table-cell">
+          S/ {% widthratio p.precio_usd 1 tipo_cambio.venta %}
+        </td>
+        {% endif %}
+        <td class="px-5 py-3.5 text-center hidden sm:table-cell">
+          {% if p.activo %}
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{% trans "Activo" %}</span>
+          {% else %}
+          <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{% trans "Inactivo" %}</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3.5">
+          <div class="flex items-center justify-end gap-2">
+            <a href="{% url 'catalogo:producto_update' p.pk %}"
+              class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" title="{% trans "Editar" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+            </a>
+            {% if p.activo %}
+            <a href="{% url 'catalogo:producto_delete' p.pk %}"
+              class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="{% trans "Desactivar" %}">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+              </svg>
+            </a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if is_paginated %}
+  <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+    <span>{% trans "Página" %} {{ page_obj.number }} {% trans "de" %} {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-1">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}"
+        class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">← {% trans "Anterior" %}</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if categoria_filtro %}&categoria={{ categoria_filtro }}{% endif %}"
+        class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">{% trans "Siguiente" %} →</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="bg-white rounded-xl border border-gray-200 py-16 text-center">
+  <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+  </svg>
+  {% if q or categoria_filtro %}
+  <p class="text-gray-500 text-sm">{% trans "No hay resultados para los filtros aplicados." %}</p>
+  {% else %}
+  <p class="text-gray-500 text-sm">{% trans "El catálogo de productos está vacío." %}</p>
+  <a href="{% url 'catalogo:producto_create' %}"
+    class="inline-flex items-center gap-2 mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+    + {% trans "Agregar primer producto" %}
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Roles" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Roles y permisos" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'usuarios:usuario_list' %}" class="hover:text-blue-500">{% trans "Usuarios" %}</a>
+  / {% trans "Roles" %}
+</p>
+{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between gap-4 mb-6">
+  <div>
+    <h2 class="text-xl font-bold text-gray-900">{% trans "Roles del sistema" %}</h2>
+    <p class="text-xs text-gray-400 mt-0.5">{% trans "Define qué puede ver y hacer cada tipo de usuario." %}</p>
+  </div>
+  <a href="{% url 'usuarios:rol_create' %}"
+    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    {% trans "Nuevo Rol" %}
+  </a>
+</div>
+
+{% if messages %}
+{% for msg in messages %}
+<div class="mb-4 px-4 py-3 rounded-lg text-sm
+  {% if msg.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+  {% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">
+  {{ msg }}
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="space-y-4">
+  {% for rol in roles %}
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="px-5 py-4 flex items-center justify-between gap-4 border-b border-gray-100 bg-gray-50">
+      <div class="flex items-center gap-3">
+        <span class="text-xs px-2.5 py-1 rounded-full font-semibold {{ rol.color_badge }}">
+          {{ rol.nombre }}
+        </span>
+        {% if rol.es_superadmin %}
+        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+          🔑 Acceso total
+        </span>
+        {% endif %}
+        {% if not rol.activo %}
+        <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Inactivo</span>
+        {% endif %}
+        {% if rol.descripcion %}
+        <span class="text-xs text-gray-400">{{ rol.descripcion }}</span>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-gray-400">{{ rol.usuarios.count }} usuario{{ rol.usuarios.count|pluralize:"s" }}</span>
+        <a href="{% url 'usuarios:rol_update' rol.pk %}"
+          class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" title="Editar">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    {% if not rol.es_superadmin %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead>
+          <tr class="border-b border-gray-50">
+            <th class="px-5 py-2 text-left text-gray-400 font-medium w-40">Módulo</th>
+            <th class="px-3 py-2 text-center text-gray-400 font-medium">Ver</th>
+            <th class="px-3 py-2 text-center text-gray-400 font-medium">Crear</th>
+            <th class="px-3 py-2 text-center text-gray-400 font-medium">Editar</th>
+            <th class="px-3 py-2 text-center text-gray-400 font-medium">Eliminar</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for p in rol.permisos.all %}
+          <tr class="hover:bg-gray-50">
+            <td class="px-5 py-2 text-gray-700 font-medium">{{ p.get_modulo_display }}</td>
+            <td class="px-3 py-2 text-center">
+              {% if p.puede_ver %}<span class="text-green-500">✓</span>{% else %}<span class="text-gray-200">—</span>{% endif %}
+            </td>
+            <td class="px-3 py-2 text-center">
+              {% if p.puede_crear %}<span class="text-green-500">✓</span>{% else %}<span class="text-gray-200">—</span>{% endif %}
+            </td>
+            <td class="px-3 py-2 text-center">
+              {% if p.puede_editar %}<span class="text-green-500">✓</span>{% else %}<span class="text-gray-200">—</span>{% endif %}
+            </td>
+            <td class="px-3 py-2 text-center">
+              {% if p.puede_eliminar %}<span class="text-green-500">✓</span>{% else %}<span class="text-gray-200">—</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="px-5 py-3 text-xs text-purple-600 bg-purple-50">
+      Este rol tiene acceso completo a todos los módulos sin restricciones.
+    </div>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div class="bg-white rounded-xl border border-gray-200 py-12 text-center text-gray-400 text-sm">
+    No hay roles configurados.
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ titulo_pagina }} — Gibit Tecnología{% endblock %}
+{% block page_title %}{{ titulo_pagina }}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'proyectos:proyecto_list' %}" class="hover:text-blue-500">{% trans "Proyectos" %}</a>
+  / {{ titulo_pagina }}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl">
+
+  {% if messages %}
+  {% for msg in messages %}
+  <div class="mb-4 px-4 py-3 rounded-lg text-sm
+    {% if msg.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+    {% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">
+    {{ msg }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- Proforma de origen (opcional) -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+        <div>
+          <h3 class="font-semibold text-gray-800 text-sm">{% trans "Proforma de origen" %}</h3>
+          <p class="text-xs text-gray-400 mt-0.5">{% trans "Opcional — al seleccionar una proforma se autocompletan los campos del proyecto." %}</p>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">{% trans "Opcional" %}</span>
+      </div>
+      <div class="px-5 py-4">
+        <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Proforma" %}</label>
+        {{ form.proforma }}
+      </div>
+    </div>
+
+    <!-- Empresa / Contacto / Sede -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-semibold text-gray-800 text-sm">{% trans "Cliente" %}</h3>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">
+            {% trans "Empresa" %} <span class="text-red-400">*</span>
+          </label>
+          {{ form.empresa }}
+          {% if form.empresa.errors %}<p class="mt-1 text-xs text-red-600">{{ form.empresa.errors.0 }}</p>{% endif %}
+        </div>
+
+        <!-- Contacto + Sede (cascade HTMX) -->
+        <div id="contacto-sede-wrapper" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Contacto" %}</label>
+            {{ form.contacto }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Sede" %}</label>
+            {{ form.sede }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Título y fechas -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-semibold text-gray-800 text-sm">{% trans "Alcance y fechas" %}</h3>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">
+            {% trans "Título / Alcance" %} <span class="text-red-400">*</span>
+          </label>
+          {{ form.titulo }}
+          {% if form.titulo.errors %}<p class="mt-1 text-xs text-red-600">{{ form.titulo.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Fecha de inicio" %}</label>
+            {{ form.fecha_inicio }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Fecha fin prevista" %}</label>
+            {{ form.fecha_fin_prevista }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Valor económico -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-semibold text-gray-800 text-sm">{% trans "Valor económico" %}</h3>
+      </div>
+      <div class="px-5 py-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Valor (USD)" %}</label>
+            {{ form.valor_usd }}
+            {% if form.valor_usd.errors %}<p class="mt-1 text-xs text-red-600">{{ form.valor_usd.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "T.C. Venta" %}</label>
+            {{ form.tc_venta }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Valor (PEN)" %}</label>
+            {{ form.valor_pen }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observaciones + Contrato -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-semibold text-gray-800 text-sm">{% trans "Notas y contrato" %}</h3>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Observaciones internas" %}</label>
+          {{ form.observaciones }}
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Texto del contrato" %}</label>
+          <p class="text-xs text-gray-400 mb-1">{% trans "Alcance, entregables, condiciones de pago y garantía para el contrato imprimible." %}</p>
+          {{ form.texto_contrato }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex items-center justify-between">
+      <a href="{% url 'proyectos:proyecto_list' %}"
+        class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+        ← {% trans "Cancelar" %}
+      </a>
+      <button type="submit"
+        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+        {{ accion }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+function recalcularPen() {
+  var usd = parseFloat(document.getElementById('id_valor_usd')?.value) || 0;
+  var tc = parseFloat(document.getElementById('id_tc_venta')?.value) || 0;
+  if (usd && tc) {
+    var pen = (usd * tc).toFixed(2);
+    var penField = document.getElementById('id_valor_pen');
+    if (penField) penField.value = pen;
+  }
+}
+document.getElementById('id_valor_usd')?.addEventListener('change', recalcularPen);
+
+function autoFillDesdeProforma(proformaId) {
+  if (!proformaId) return;
+
+  fetch('/proyectos/htmx/proforma/?proforma=' + proformaId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.empresa_id) return;
+
+      // Fill simple fields
+      var titulo = document.getElementById('id_titulo');
+      if (titulo && data.titulo) titulo.value = data.titulo;
+
+      var usd = document.getElementById('id_valor_usd');
+      if (usd && data.valor_usd) usd.value = data.valor_usd;
+
+      var tc = document.getElementById('id_tc_venta');
+      if (tc && data.tc_venta) tc.value = data.tc_venta;
+
+      var pen = document.getElementById('id_valor_pen');
+      if (pen && data.valor_pen) pen.value = data.valor_pen;
+
+      // Trigger empresa cascade via HTMX, then set contacto/sede once loaded
+      var empresaSelect = document.getElementById('id_empresa');
+      if (empresaSelect && data.empresa_id) {
+        empresaSelect.value = data.empresa_id;
+
+        // Listen for HTMX to finish reloading contacto/sede options
+        var wrapper = document.getElementById('contacto-sede-wrapper');
+        if (wrapper) {
+          wrapper.addEventListener('htmx:afterSettle', function onSettle() {
+            wrapper.removeEventListener('htmx:afterSettle', onSettle);
+            if (data.contacto_id) {
+              var c = document.getElementById('id_contacto');
+              if (c) c.value = data.contacto_id;
+            }
+            if (data.sede_id) {
+              var s = document.getElementById('id_sede');
+              if (s) s.value = data.sede_id;
+            }
+          });
+        }
+
+        // Fire HTMX request manually
+        htmx.trigger(empresaSelect, 'change');
+      }
+    });
+}
+</script>
+{% endblock %}

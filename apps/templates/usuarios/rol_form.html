@@ -1,0 +1,273 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ titulo_pagina }} — Gibit Tecnología{% endblock %}
+{% block page_title %}{{ titulo_pagina }}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  <a href="{% url 'usuarios:usuario_list' %}" class="hover:text-blue-500">{% trans "Usuarios" %}</a>
+  / <a href="{% url 'usuarios:rol_list' %}" class="hover:text-blue-500">{% trans "Roles" %}</a>
+  / {{ titulo_pagina }}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl">
+  <form method="post" id="rol-form" class="space-y-5">
+    {% csrf_token %}
+
+    <!-- Datos del rol -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-semibold text-gray-800 text-sm">{% trans "Datos del rol" %}</h3>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Nombre del rol" %} <span class="text-red-400">*</span></label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}<p class="mt-1 text-xs text-red-600">{{ form.nombre.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Tipo base" %}</label>
+            {{ form.tipo }}
+            <p class="mt-1 text-xs text-gray-400">{% trans "Los «Técnicos» aparecen en proyectos y proformas." %}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Descripción" %}</label>
+            {{ form.descripcion }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{% trans "Color del badge" %}</label>
+            {{ form.color_badge }}
+            {% if form.instance.pk %}
+            <div class="mt-1.5">
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ form.instance.color_badge }}">
+                {{ form.instance.nombre }}
+              </span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <label class="flex items-center gap-2 cursor-pointer">
+            {{ form.es_superadmin }}
+            <span class="text-sm text-gray-700">{% trans "Acceso total (omite todos los permisos)" %}</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            {{ form.activo }}
+            <span class="text-sm text-gray-700">{% trans "Rol activo" %}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drag-and-drop permisos -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+        <div>
+          <h3 class="font-semibold text-gray-800 text-sm">{% trans "Permisos" %}</h3>
+          <p class="text-xs text-gray-400 mt-0.5">{% trans "Arrastra permisos hacia «Asignados» o haz clic en el ícono +" %}</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <button type="button" id="btn-asignar-todos"
+            class="px-2.5 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Asignar todos
+          </button>
+          <button type="button" id="btn-quitar-todos"
+            class="px-2.5 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+            Quitar todos
+          </button>
+        </div>
+      </div>
+
+      <div class="p-4 grid grid-cols-2 gap-4">
+        <!-- Disponibles -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Disponibles</span>
+            <span id="count-disponibles" class="text-xs text-gray-400 tabular-nums"></span>
+          </div>
+          <div id="sortable-disponibles"
+            class="min-h-64 max-h-[440px] overflow-y-auto rounded-lg border-2 border-dashed border-gray-200 p-2 space-y-1 transition-colors">
+            {% for grupo in permisos_grouped %}
+              {% for p in grupo.permisos %}
+                {% if not p.checked %}
+                <div class="permiso-item group flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg cursor-grab active:cursor-grabbing select-none text-sm transition-colors"
+                  data-id="{{ p.id }}" data-modulo="{{ grupo.label }}">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-200 text-gray-500 shrink-0">{{ grupo.label }}</span>
+                    <span class="text-gray-700 text-xs truncate">{{ p.nombre }}</span>
+                  </div>
+                  <button type="button" data-action="asignar"
+                    class="shrink-0 w-5 h-5 flex items-center justify-center text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                </div>
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Asignados -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Asignados</span>
+            <span id="count-asignados" class="text-xs text-blue-500 tabular-nums font-medium"></span>
+          </div>
+          <div id="sortable-asignados"
+            class="min-h-64 max-h-[440px] overflow-y-auto rounded-lg border-2 border-dashed border-blue-200 bg-blue-50/30 p-2 space-y-1 transition-colors">
+            {% for grupo in permisos_grouped %}
+              {% for p in grupo.permisos %}
+                {% if p.checked %}
+                <div class="permiso-item group flex items-center justify-between gap-2 px-3 py-2 bg-white hover:bg-blue-50 border border-blue-200 rounded-lg cursor-grab active:cursor-grabbing select-none text-sm transition-colors"
+                  data-id="{{ p.id }}" data-modulo="{{ grupo.label }}">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 shrink-0">{{ grupo.label }}</span>
+                    <span class="text-gray-700 text-xs truncate">{{ p.nombre }}</span>
+                  </div>
+                  <button type="button" data-action="quitar"
+                    class="shrink-0 w-5 h-5 flex items-center justify-center text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                  </button>
+                </div>
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden inputs populated before submit -->
+      <div id="permisos-inputs" class="hidden"></div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex items-center justify-between">
+      <a href="{% url 'usuarios:rol_list' %}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+        ← {% trans "Cancelar" %}
+      </a>
+      <button type="submit"
+        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+        {{ accion }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+(function () {
+  const dispEl = document.getElementById('sortable-disponibles');
+  const asigEl = document.getElementById('sortable-asignados');
+
+  function updateCounts() {
+    document.getElementById('count-disponibles').textContent =
+      dispEl.querySelectorAll('.permiso-item').length + ' permisos';
+    document.getElementById('count-asignados').textContent =
+      asigEl.querySelectorAll('.permiso-item').length + ' permisos';
+  }
+
+  const sortableOpts = {
+    group: 'permisos',
+    animation: 150,
+    ghostClass: 'opacity-30',
+    dragClass: 'shadow-lg',
+    onEnd: updateCounts,
+  };
+
+  Sortable.create(dispEl, sortableOpts);
+  Sortable.create(asigEl, sortableOpts);
+
+  // Click-to-move buttons
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const item = btn.closest('.permiso-item');
+    if (!item) return;
+
+    if (btn.dataset.action === 'asignar') {
+      // Style change for assigned
+      item.classList.remove('bg-gray-50', 'hover:bg-gray-100', 'border-gray-200');
+      item.classList.add('bg-white', 'hover:bg-blue-50', 'border-blue-200');
+      item.querySelector('span.bg-gray-200').className =
+        item.querySelector('span.bg-gray-200').className
+          .replace('bg-gray-200 text-gray-500', 'bg-blue-100 text-blue-600');
+      btn.dataset.action = 'quitar';
+      btn.className = btn.className.replace('text-blue-500 hover:text-blue-700', 'text-red-400 hover:text-red-600');
+      btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>`;
+      asigEl.appendChild(item);
+    } else {
+      // Style change for available
+      item.classList.remove('bg-white', 'hover:bg-blue-50', 'border-blue-200');
+      item.classList.add('bg-gray-50', 'hover:bg-gray-100', 'border-gray-200');
+      const badge = item.querySelector('span.bg-blue-100');
+      if (badge) badge.className = badge.className.replace('bg-blue-100 text-blue-600', 'bg-gray-200 text-gray-500');
+      btn.dataset.action = 'asignar';
+      btn.className = btn.className.replace('text-red-400 hover:text-red-600', 'text-blue-500 hover:text-blue-700');
+      btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>`;
+      dispEl.appendChild(item);
+    }
+    updateCounts();
+  });
+
+  // Bulk buttons
+  document.getElementById('btn-asignar-todos').addEventListener('click', function () {
+    dispEl.querySelectorAll('.permiso-item').forEach(item => {
+      item.classList.remove('bg-gray-50', 'hover:bg-gray-100', 'border-gray-200');
+      item.classList.add('bg-white', 'hover:bg-blue-50', 'border-blue-200');
+      const badge = item.querySelector('span.bg-gray-200');
+      if (badge) badge.className = badge.className.replace('bg-gray-200 text-gray-500', 'bg-blue-100 text-blue-600');
+      const btn = item.querySelector('[data-action]');
+      if (btn) {
+        btn.dataset.action = 'quitar';
+        btn.className = btn.className.replace('text-blue-500 hover:text-blue-700', 'text-red-400 hover:text-red-600');
+        btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>`;
+      }
+      asigEl.appendChild(item);
+    });
+    updateCounts();
+  });
+
+  document.getElementById('btn-quitar-todos').addEventListener('click', function () {
+    asigEl.querySelectorAll('.permiso-item').forEach(item => {
+      item.classList.remove('bg-white', 'hover:bg-blue-50', 'border-blue-200');
+      item.classList.add('bg-gray-50', 'hover:bg-gray-100', 'border-gray-200');
+      const badge = item.querySelector('span.bg-blue-100');
+      if (badge) badge.className = badge.className.replace('bg-blue-100 text-blue-600', 'bg-gray-200 text-gray-500');
+      const btn = item.querySelector('[data-action]');
+      if (btn) {
+        btn.dataset.action = 'asignar';
+        btn.className = btn.className.replace('text-red-400 hover:text-red-600', 'text-blue-500 hover:text-blue-700');
+        btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>`;
+      }
+      dispEl.appendChild(item);
+    });
+    updateCounts();
+  });
+
+  // Populate hidden inputs before submit
+  document.getElementById('rol-form').addEventListener('submit', function () {
+    const container = document.getElementById('permisos-inputs');
+    container.innerHTML = '';
+    asigEl.querySelectorAll('.permiso-item[data-id]').forEach(function (el) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'permisos';
+      input.value = el.dataset.id;
+      container.appendChild(input);
+    });
+  });
+
+  updateCounts();
+})();
+</script>
+{% endblock %}

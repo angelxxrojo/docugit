@@ -1,0 +1,11 @@
+<option value="">Sin contacto asignado</option>
+{% for c in contactos %}
+<option value="{{ c.pk }}">{{ c.nombre }}{% if c.cargo %} — {{ c.cargo }}{% endif %}{% if c.es_principal %} ★{% endif %}</option>
+{% endfor %}
+</select>
+
+<select name="sede" id="id_sede" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+<option value="">Sin sede específica</option>
+{% for s in sedes %}
+<option value="{{ s.pk }}">{{ s.nombre }}{% if s.es_principal %} ★{% endif %}</option>
+{% endfor %}

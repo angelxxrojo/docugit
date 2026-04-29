@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ doc.nombre }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a1a;
+      --muted: #5a6070;
+      --border: #d0d5dd;
+      --accent: #1e3a8a;
+    }
+
+    body {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 11pt;
+      line-height: 1.75;
+      color: var(--ink);
+      background: #fff;
+      padding: 0;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 20mm 22mm 22mm;
+      position: relative;
+    }
+
+    /* Header */
+    .doc-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: 28px;
+      gap: 20px;
+    }
+
+    .doc-header .brand { display: flex; align-items: center; gap: 12px; }
+    .doc-header .brand img { height: 48px; width: auto; object-fit: contain; }
+    .doc-header .brand-text h1 {
+      font-family: 'Inter', sans-serif;
+      font-size: 15pt;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: -0.3px;
+    }
+    .doc-header .brand-text p {
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .doc-header .doc-meta {
+      text-align: right;
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .doc-header .doc-meta .doc-tipo {
+      font-size: 10pt;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    /* Body content */
+    .doc-content {
+      font-size: 11pt;
+      line-height: 1.75;
+    }
+
+    .doc-content h1 {
+      font-size: 14pt;
+      font-weight: 600;
+      color: var(--accent);
+      margin: 1.5em 0 0.6em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+    .doc-content h2 {
+      font-size: 12pt;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 1.3em 0 0.5em;
+    }
+    .doc-content h3 {
+      font-size: 11pt;
+      font-weight: 600;
+      margin: 1em 0 0.4em;
+    }
+    .doc-content p { margin-bottom: 0.8em; }
+    .doc-content ul, .doc-content ol {
+      padding-left: 1.6em;
+      margin-bottom: 0.8em;
+    }
+    .doc-content li { margin-bottom: 0.3em; }
+    .doc-content blockquote {
+      border-left: 3px solid var(--accent);
+      padding-left: 14px;
+      color: var(--muted);
+      font-style: italic;
+      margin: 1em 0;
+    }
+    .doc-content strong { font-weight: 600; }
+
+    /* Footer */
+    .doc-footer {
+      margin-top: 40px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .doc-footer p {
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: var(--muted);
+    }
+
+    /* Print button */
+    .print-bar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+    .btn-print, .btn-back {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-print { background: #1e3a8a; color: #fff; }
+    .btn-print:hover { background: #1e40af; }
+    .btn-back { background: #f1f5f9; color: #374151; }
+    .btn-back:hover { background: #e2e8f0; }
+
+    @media print {
+      .print-bar { display: none; }
+      body { padding: 0; }
+      .page { width: 100%; padding: 15mm 18mm 18mm; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="brand">
+      {% if config.logo %}
+      <img src="{{ config.logo.url }}" alt="{{ config.nombre_empresa }}">
+      {% endif %}
+      <div class="brand-text">
+        <h1>{{ config.nombre_empresa|default:"Gibit Tecnología" }}</h1>
+        {% if config.slogan %}
+        <p>{{ config.slogan }}</p>
+        {% endif %}
+        {% if config.ruc %}
+        <p>RUC {{ config.ruc }}</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="doc-meta">
+      <p class="doc-tipo">{{ doc.get_tipo_label }}</p>
+      <p>{{ doc.nombre }}</p>
+      {% if doc.proyecto %}
+      <p>Proyecto: {{ doc.proyecto.numero }}</p>
+      {% elif doc.empresa %}
+      <p>Cliente: {{ doc.empresa.razon_social }}</p>
+      {% endif %}
+      <p>Fecha: {{ doc.created_at|date:"d/m/Y" }}</p>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="doc-content">
+    {{ doc.cuerpo_html|safe }}
+  </div>
+
+  <!-- Footer -->
+  <div class="doc-footer">
+    <p>
+      {{ config.nombre_empresa|default:"Gibit Tecnología" }}
+      {% if config.email %} · {{ config.email }}{% endif %}
+      {% if config.telefono %} · {{ config.telefono }}{% endif %}
+    </p>
+    <p>Documento generado el {% now "d/m/Y" %}</p>
+  </div>
+
+</div>
+
+<!-- Print bar -->
+<div class="print-bar">
+  <button class="btn-back" onclick="window.history.back()">← Volver</button>
+  <button class="btn-print" onclick="window.print()">Imprimir / Guardar PDF</button>
+</div>
+
+</body>
+</html>

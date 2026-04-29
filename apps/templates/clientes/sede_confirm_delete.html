@@ -1,0 +1,56 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% trans "Desactivar Sede" %} — Gibit Tecnología{% endblock %}
+{% block page_title %}{% trans "Desactivar Sede" %}{% endblock %}
+
+{% block breadcrumb %}
+<p class="text-xs text-gray-400 mt-0.5">
+  CRM / <a href="{% url 'clientes:empresa_detail' empresa.pk %}" class="hover:text-blue-500">{{ empresa.razon_social }}</a> / {% trans "Desactivar sede" %}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+  <div class="bg-white rounded-xl border border-amber-200 overflow-hidden">
+    <div class="px-6 py-5 border-b border-amber-100 bg-amber-50">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+          <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="font-semibold text-gray-900">{% trans "Confirmar desactivación" %}</h2>
+          <p class="text-sm text-gray-500">{% trans "Puedes reactivarla en cualquier momento desde editar." %}</p>
+        </div>
+      </div>
+    </div>
+    <div class="px-6 py-5">
+      <div class="bg-gray-50 rounded-lg px-4 py-3 mb-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">{% trans "Sede a desactivar" %}</p>
+        <p class="font-semibold text-gray-900">{{ object.nombre }}</p>
+        {% if object.address %}
+        <p class="text-sm text-gray-500">{{ object.address }}</p>
+        {% endif %}
+        <p class="text-sm text-gray-500">
+          {% if object.district %}{{ object.district.name }}{% endif %}
+          {% if object.province %}, {{ object.province.name }}{% endif %}
+          {% if object.department %} — {{ object.department.name }}{% endif %}
+        </p>
+      </div>
+      <form method="post" class="flex items-center justify-end gap-3">
+        {% csrf_token %}
+        <a href="{% url 'clientes:empresa_detail' empresa.pk %}"
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          {% trans "Cancelar" %}
+        </a>
+        <button type="submit"
+          class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+          {% trans "Sí, desactivar" %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
