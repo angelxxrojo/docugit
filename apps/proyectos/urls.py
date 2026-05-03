@@ -13,6 +13,7 @@ urlpatterns = [
     path('<int:pk>/estado/', views.ProyectoEstadoView.as_view(), name='proyecto_estado'),
     path('<int:pk>/contrato/', views.ProyectoContratoView.as_view(), name='proyecto_contrato'),
     path('<int:pk>/gantt-pdf/', views.ProyectoGanttPDFView.as_view(), name='proyecto_gantt_pdf'),
+    path('<int:pk>/gantt-pdf/descargar/', views.ProyectoGanttPDFDownloadView.as_view(), name='proyecto_gantt_pdf_download'),
     # Desde proforma (HU13)
     path('desde-proforma/<int:proforma_pk>/', views.ProyectoFromProformaView.as_view(), name='desde_proforma'),
     # Técnicos (HTMX)

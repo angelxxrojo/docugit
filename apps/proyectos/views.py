@@ -572,6 +572,33 @@ class ProyectoGanttPDFView(LoginRequiredMixin, PermissionRequiredMixin, DetailVi
         return ctx
 
 
+class ProyectoGanttPDFDownloadView(ProyectoGanttPDFView):
+    """Genera y descarga el PDF directamente usando xhtml2pdf."""
+    template_name = 'proyectos/proyecto_gantt_pdf_download.html'
+
+    def get(self, request, *args, **kwargs):
+        from io import BytesIO
+        from pathlib import Path
+        from xhtml2pdf import pisa
+        from django.conf import settings as django_settings
+
+        self.object = self.get_object()
+        ctx = self.get_context_data()
+        ctx['request'] = request
+        config = ctx['config']
+        if config.logo:
+            logo_file = Path(django_settings.MEDIA_ROOT) / config.logo.name
+            ctx['logo_path'] = str(logo_file)
+        html_string = render_to_string(self.template_name, ctx, request=request)
+        buf = BytesIO()
+        pisa.CreatePDF(html_string, dest=buf, encoding='utf-8')
+        buf.seek(0)
+        filename = f'Gantt_{ctx["proyecto"].numero}.pdf'
+        response = HttpResponse(buf.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+
 # ── Gantt (Fase 2) ────────────────────────────────────────────────────────────
 
 class GanttDataView(LoginRequiredMixin, PermissionRequiredMixin, View):

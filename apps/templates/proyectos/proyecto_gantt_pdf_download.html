@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gantt — {{ proyecto.numero }} — {{ config.nombre_empresa }}</title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 12mm 15mm 22mm 15mm;
+
+      @frame footerFrame {
+        -pdf-frame-content: footerContent;
+        bottom: 0mm;
+        left: 0mm;
+        right: 0mm;
+        height: 12mm;
+        margin: 0;
+      }
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      color: #333333;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    table.header-table {
+      width: 100%;
+      margin-bottom: 14px;
+    }
+    table.header-table td {
+      vertical-align: middle;
+      padding: 0;
+      border: none;
+    }
+
+    table.gantt-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9px;
+      margin-bottom: 10px;
+    }
+    table.gantt-table th {
+      text-align: left;
+      font-weight: bold;
+      font-size: 8px;
+      color: #555555;
+      padding: 6px 5px;
+      border-bottom: 2px solid #cccccc;
+      text-transform: uppercase;
+    }
+    table.gantt-table td {
+      padding: 5px 5px;
+      border-bottom: 1px solid #dddddd;
+      vertical-align: middle;
+      color: #333333;
+    }
+
+    table.progress-bar {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table.progress-bar td {
+      padding: 0;
+      border: none;
+      height: 6px;
+    }
+
+    table.gantt-chart {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table.gantt-chart td {
+      padding: 3px 0;
+      border: none;
+      vertical-align: middle;
+    }
+
+    table.bar-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    table.bar-table td {
+      padding: 0;
+      border: none;
+      height: 14px;
+    }
+
+    table.timeline-header {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+    table.timeline-header td {
+      font-size: 8px;
+      color: #888888;
+      padding: 0 0 5px;
+      border: none;
+      border-bottom: 1px solid #cccccc;
+    }
+
+    table.legend-table {
+      margin-top: 14px;
+      border-collapse: collapse;
+    }
+    table.legend-table td {
+      padding: 3px 16px 3px 0;
+      border: none;
+      font-size: 9px;
+      color: #555555;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Footer (hidden from flow, rendered by @frame on every page) -->
+  <div id="footerContent">
+    <table style="width:100%; border-collapse:collapse; background-color:#2c2c2c; padding:0;">
+      <tr>
+        <td style="color:#ffffff; font-size:8px; padding:5px 15px; border:none; text-transform:uppercase; letter-spacing:0.5px;">
+          GANTT &mdash; {{ proyecto.numero }} &mdash; {{ proyecto.titulo|upper|truncatechars:55 }}
+        </td>
+        <td style="color:#ffffff; font-size:8px; padding:5px 15px; border:none; text-align:right; text-transform:uppercase; letter-spacing:0.5px;">
+          {{ config.nombre_empresa|upper }}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ═══ PAGE 1: Table ═══ -->
+
+  <table class="header-table">
+    <tr>
+      <td>
+        {% if logo_path %}
+          <img src="{{ logo_path }}" height="36" alt="{{ config.nombre_empresa }}">
+        {% else %}
+          <span style="font-size:20px; font-weight:bold; color:#5DBB63;">{{ config.nombre_empresa }}</span>
+        {% endif %}
+      </td>
+      <td style="text-align:right; font-size:9px; color:#777777;">
+        <span style="font-size:13px; font-weight:bold; color:#333333; letter-spacing:1px;">{{ proyecto.numero }}</span>
+        <br/>{{ config.nombre_empresa }}
+      </td>
+    </tr>
+  </table>
+
+  <div style="font-size:9px; color:#777777; border-bottom:1px solid #cccccc; padding-bottom:8px; margin-bottom:14px;">
+    {{ proyecto.get_estado_display }}
+    &bull;
+    {{ proyecto.empresa.razon_social }}
+    {% if proyecto.fecha_inicio %}
+      &bull; Inicio: {{ proyecto.fecha_inicio|date:"d/m/Y" }}
+    {% endif %}
+    {% if proyecto.fecha_fin_prevista %}
+      &bull; Fin previsto: {{ proyecto.fecha_fin_prevista|date:"d/m/Y" }}
+    {% endif %}
+    {% if proyecto.duracion_dias %}
+      &bull; {{ proyecto.duracion_dias }} dias
+    {% endif %}
+  </div>
+
+  <div style="font-size:15px; font-weight:bold; color:#333333; margin-bottom:16px;">
+    {{ proyecto.titulo }}
+  </div>
+
+  {% if actividades %}
+  <table class="gantt-table">
+    <thead>
+      <tr>
+        <th style="width:4%; text-align:center;">#</th>
+        <th style="width:32%;">Actividad</th>
+        <th style="width:14%;">Responsable</th>
+        <th style="width:12%;">Estado</th>
+        <th style="width:10%; text-align:center;">Inicio</th>
+        <th style="width:10%; text-align:center;">Fin</th>
+        <th style="width:7%; text-align:center;">Dias</th>
+        <th style="width:11%; text-align:center;">Avance</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for grupo_nombre, grupo_acts in grupos.items %}
+      {% if grupo_nombre %}
+      <tr>
+        <td colspan="8" style="padding:10px 5px 5px; font-weight:bold; font-size:9px; color:#4f46e5; border-bottom:2px solid #c7d2fe; background-color:#eef2ff;">
+          {{ grupo_nombre }}
+        </td>
+      </tr>
+      {% endif %}
+      {% for act in grupo_acts %}
+      <tr>
+        <td style="text-align:center; color:#999999;">{{ forloop.counter }}</td>
+        <td>{{ act.titulo }}</td>
+        <td style="color:#666666;">{{ act.responsable.get_full_name|default:"—" }}</td>
+        <td>
+          {% if act.estado_slug == "pendiente" %}
+            <span style="display:inline-block; width:8px; height:8px; background-color:#9ca3af; border-radius:50%; vertical-align:middle;">&nbsp;</span>
+          {% elif act.estado_slug == "en_progreso" %}
+            <span style="display:inline-block; width:8px; height:8px; background-color:#3b82f6; border-radius:50%; vertical-align:middle;">&nbsp;</span>
+          {% elif act.estado_slug == "en_revision" %}
+            <span style="display:inline-block; width:8px; height:8px; background-color:#f59e0b; border-radius:50%; vertical-align:middle;">&nbsp;</span>
+          {% elif act.estado_slug == "completado" %}
+            <span style="display:inline-block; width:8px; height:8px; background-color:#22c55e; border-radius:50%; vertical-align:middle;">&nbsp;</span>
+          {% elif act.estado_slug == "cancelado" %}
+            <span style="display:inline-block; width:8px; height:8px; background-color:#ef4444; border-radius:50%; vertical-align:middle;">&nbsp;</span>
+          {% else %}
+            <span style="display:inline-block; width:8px; height:8px; background-color:#6b7280; border-radius:50%; vertical-align:middle;">&nbsp;</span>
+          {% endif %}
+          {{ act.estado_label }}
+        </td>
+        <td style="text-align:center;">{{ act.fecha_inicio_fmt }}</td>
+        <td style="text-align:center;">{{ act.fecha_fin_fmt }}</td>
+        <td style="text-align:center;">{{ act.duracion_dias }}</td>
+        <td style="text-align:center;">
+          <table class="progress-bar">
+            <tr>
+              {% if act.progreso > 0 %}
+              <td style="width:{{ act.progreso }}%; background-color:#3b82f6;"></td>
+              {% endif %}
+              {% if act.progreso < 100 %}
+              <td style="background-color:#e5e7eb;"></td>
+              {% endif %}
+            </tr>
+          </table>
+          <span style="font-size:8px; color:#888888;">{{ act.progreso }}%</span>
+        </td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="text-align:center; color:#999999; padding:40px 0; font-size:12px;">
+    No hay actividades registradas en este proyecto.
+  </div>
+  {% endif %}
+
+  {% if actividades and has_dates %}
+  <pdf:nextpage />
+
+  <!-- ═══ PAGE 2: Gantt Chart ═══ -->
+
+  <table class="header-table">
+    <tr>
+      <td>
+        {% if logo_path %}
+          <img src="{{ logo_path }}" height="36" alt="{{ config.nombre_empresa }}">
+        {% else %}
+          <span style="font-size:20px; font-weight:bold; color:#5DBB63;">{{ config.nombre_empresa }}</span>
+        {% endif %}
+      </td>
+      <td style="text-align:right; font-size:9px; color:#777777;">
+        <span style="font-size:13px; font-weight:bold; color:#333333; letter-spacing:1px;">{{ proyecto.numero }}</span>
+        <br/>Diagrama de Gantt
+      </td>
+    </tr>
+  </table>
+
+  <div style="font-size:15px; font-weight:bold; color:#333333; margin-bottom:16px;">
+    {{ proyecto.titulo }}
+  </div>
+
+  <div style="background-color:#f5f5f5; border:1px solid #dddddd; padding:12px 14px;">
+    <div style="font-size:8px; text-transform:uppercase; letter-spacing:1px; color:#666666; margin-bottom:10px; font-weight:bold;">
+      Cronograma de actividades
+    </div>
+
+    <table class="timeline-header">
+      <tr>
+        <td style="width:130px;">&nbsp;</td>
+        <td style="text-align:left;">{{ range_start_fmt }}</td>
+        {% if range_mid_fmt %}
+        <td style="text-align:center;">{{ range_mid_fmt }}</td>
+        {% endif %}
+        <td style="text-align:right;">{{ range_end_fmt }}</td>
+      </tr>
+    </table>
+
+    <table class="gantt-chart">
+      {% for grupo_nombre, grupo_acts in grupos.items %}
+      {% if grupo_nombre %}
+      <tr>
+        <td colspan="2" style="font-size:8px; font-weight:bold; color:#4f46e5; padding:8px 0 3px; border-top:1px solid #cccccc;">
+          {{ grupo_nombre }}
+        </td>
+      </tr>
+      {% endif %}
+      {% for act in grupo_acts %}
+      {% if act.left_pct %}
+      <tr>
+        <td style="width:130px; font-size:9px; color:#444444; padding-right:8px;">
+          {{ act.titulo|truncatechars:24 }}
+        </td>
+        <td>
+          <table class="bar-table">
+            <tr>
+              {% if act.left_pct != "0.0" %}
+              <td style="width:{{ act.left_pct }}%;"></td>
+              {% endif %}
+              {% if act.estado_slug == "pendiente" %}
+              <td style="width:{{ act.width_pct }}%; background-color:#9ca3af;"></td>
+              {% elif act.estado_slug == "en_progreso" %}
+              <td style="width:{{ act.width_pct }}%; background-color:#3b82f6;"></td>
+              {% elif act.estado_slug == "en_revision" %}
+              <td style="width:{{ act.width_pct }}%; background-color:#f59e0b;"></td>
+              {% elif act.estado_slug == "completado" %}
+              <td style="width:{{ act.width_pct }}%; background-color:#22c55e;"></td>
+              {% elif act.estado_slug == "cancelado" %}
+              <td style="width:{{ act.width_pct }}%; background-color:#ef4444;"></td>
+              {% else %}
+              <td style="width:{{ act.width_pct }}%; background-color:#6b7280;"></td>
+              {% endif %}
+              <td></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+      {% endfor %}
+    </table>
+
+    <table class="legend-table">
+      <tr>
+        <td>
+          <span style="display:inline-block; width:16px; height:8px; background-color:#9ca3af; vertical-align:middle;">&nbsp;</span>
+          Pendiente
+        </td>
+        <td>
+          <span style="display:inline-block; width:16px; height:8px; background-color:#3b82f6; vertical-align:middle;">&nbsp;</span>
+          En progreso
+        </td>
+        <td>
+          <span style="display:inline-block; width:16px; height:8px; background-color:#f59e0b; vertical-align:middle;">&nbsp;</span>
+          En revision
+        </td>
+        <td>
+          <span style="display:inline-block; width:16px; height:8px; background-color:#22c55e; vertical-align:middle;">&nbsp;</span>
+          Completado
+        </td>
+      </tr>
+    </table>
+  </div>
+  {% endif %}
+
+</body>
+</html>
